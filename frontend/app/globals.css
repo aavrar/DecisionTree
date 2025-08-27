@@ -1,0 +1,463 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens to match DecisionTree design brief */
+  --background: oklch(1 0 0); /* Pure white background */
+  --foreground: oklch(0.35 0 0); /* Dark gray text */
+  --card: oklch(0.97 0 0); /* Light gray card background */
+  --card-foreground: oklch(0.35 0 0); /* Dark gray card text */
+  --popover: oklch(1 0.02 0 / 0.8); /* Glassmorphism popover */
+  --popover-foreground: oklch(0.35 0 0);
+  --primary: oklch(0.65 0.2 220); /* Cyan primary */
+  --primary-foreground: oklch(1 0 0); /* White text on primary */
+  --secondary: oklch(0.55 0.25 330); /* Pink secondary/danger */
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.8 0.15 85); /* Yellow warning */
+  --muted-foreground: oklch(0.35 0 0);
+  --accent: oklch(0.65 0.2 220); /* Cyan accent */
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.55 0.25 330); /* Pink destructive */
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0 0); /* Light border */
+  --input: oklch(1 0 0); /* White input background */
+  --ring: oklch(0.65 0.2 220 / 0.5); /* Cyan focus ring */
+  --chart-1: oklch(0.65 0.2 220); /* Cyan chart color */
+  --chart-2: oklch(0.8 0.15 85); /* Yellow chart color */
+  --chart-3: oklch(0.55 0.25 330); /* Pink chart color */
+  --chart-4: oklch(0.6 0.18 160); /* Teal chart color */
+  --chart-5: oklch(0.7 0.12 120); /* Green chart color */
+  --radius: 0.75rem; /* 12px border radius */
+  --sidebar: oklch(1 0.02 0 / 0.8); /* Glassmorphism sidebar */
+  --sidebar-foreground: oklch(0.35 0 0);
+  --sidebar-primary: oklch(0.65 0.2 220);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.8 0.15 85);
+  --sidebar-accent-foreground: oklch(0.35 0 0);
+  --sidebar-border: oklch(0.92 0 0);
+  --sidebar-ring: oklch(0.65 0.2 220 / 0.5);
+
+  /* Added custom gradient variables for DecisionTree */
+  --gradient-success: linear-gradient(135deg, oklch(0.65 0.2 220), oklch(0.6 0.18 180));
+  --gradient-warning: linear-gradient(135deg, oklch(0.6 0.18 160), oklch(0.8 0.15 85));
+  --gradient-danger: linear-gradient(135deg, oklch(0.55 0.25 330), oklch(0.8 0.15 85));
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.2 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0 / 0.8);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.7 0.2 220);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.6 0.25 330);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.85 0.15 85);
+  --muted-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.7 0.2 220);
+  --accent-foreground: oklch(0.145 0 0);
+  --destructive: oklch(0.6 0.25 330);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.2 0 0);
+  --ring: oklch(0.7 0.2 220 / 0.5);
+  --chart-1: oklch(0.7 0.2 220);
+  --chart-2: oklch(0.85 0.15 85);
+  --chart-3: oklch(0.6 0.25 330);
+  --chart-4: oklch(0.65 0.18 160);
+  --chart-5: oklch(0.75 0.12 120);
+  --sidebar: oklch(0.2 0 0 / 0.8);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.7 0.2 220);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.85 0.15 85);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.7 0.2 220 / 0.5);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Added custom utility classes for DecisionTree */
+  .gradient-success {
+    background: var(--gradient-success);
+  }
+
+  .gradient-warning {
+    background: var(--gradient-warning);
+  }
+
+  .gradient-danger {
+    background: var(--gradient-danger);
+  }
+
+  .glassmorphism {
+    backdrop-filter: blur(10px);
+    background: var(--popover);
+    border: 1px solid var(--border);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+  }
+
+  /* Added advanced modern animations and effects */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-up {
+    animation: floatUp 0.8s ease-out forwards;
+  }
+
+  .animate-gradient-shift {
+    animation: gradientShift 15s ease infinite;
+    background-size: 400% 400%;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.5s ease-out forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounceSubtle 2s ease-in-out infinite;
+  }
+
+  .animate-rotate-slow {
+    animation: rotateSlow 20s linear infinite;
+  }
+
+  .animate-scale-pulse {
+    animation: scalePulse 3s ease-in-out infinite;
+  }
+
+  /* Keyframe definitions */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+    50% {
+      transform: translateY(-5px) rotate(0deg);
+    }
+    75% {
+      transform: translateY(-15px) rotate(-1deg);
+    }
+  }
+
+  @keyframes floatUp {
+    0% {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+    }
+  }
+
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes slideDown {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0px);
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--primary);
+    }
+    50% {
+      box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+    }
+  }
+
+  @keyframes bounceSubtle {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes rotateSlow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes scalePulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  /* Enhanced glassmorphism variants */
+  .glassmorphism-strong {
+    backdrop-filter: blur(20px) saturate(180%);
+    background: var(--popover);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .glassmorphism-subtle {
+    backdrop-filter: blur(5px) saturate(120%);
+    background: var(--popover);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+  }
+
+  /* Interactive hover effects */
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 60px var(--primary);
+    transform: scale(1.02);
+  }
+
+  .hover-tilt {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-tilt:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
+  }
+
+  /* Spotlight effect */
+  .spotlight {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .spotlight:hover::before {
+    opacity: 0.1;
+  }
+
+  /* Progress bar animations */
+  .progress-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* Particle system base */
+  .particle {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    animation: particleFloat 10s infinite linear;
+  }
+
+  @keyframes particleFloat {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  /* Enhanced button animations */
+  .btn-magnetic {
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .btn-magnetic:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-magnetic:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  /* Loading skeleton animations */
+  .skeleton {
+    background: linear-gradient(90deg, var(--muted) 25%, var(--accent) 50%, var(--muted) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Text animations */
+  .text-shimmer {
+    background: linear-gradient(90deg, var(--foreground) 0%, var(--primary) 50%, var(--foreground) 100%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textShimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes textShimmer {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Morphing shapes */
+  .morph-blob {
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    animation: morphBlob 8s ease-in-out infinite;
+  }
+
+  @keyframes morphBlob {
+    0%,
+    100% {
+      border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+    25% {
+      border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%;
+    }
+    50% {
+      border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%;
+    }
+    75% {
+      border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
+    }
+  }
+}
