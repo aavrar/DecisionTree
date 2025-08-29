@@ -28,12 +28,26 @@ const factorSchema = new Schema<IFactor>({
   },
   uncertainty: {
     type: Number,
-    min: [0, 'Uncertainty must be between 0 and 1'],
-    max: [1, 'Uncertainty must be between 0 and 1']
+    min: [0, 'Uncertainty must be between 0 and 100'],
+    max: [100, 'Uncertainty must be between 0 and 100'],
+    default: 50
   },
   timeHorizon: {
     type: String,
-    enum: ['immediate', 'short', 'long']
+    enum: ['immediate', 'short', 'medium', 'long'],
+    default: 'medium'
+  },
+  emotionalWeight: {
+    type: Number,
+    min: [0, 'Emotional weight must be between 0 and 100'],
+    max: [100, 'Emotional weight must be between 0 and 100'],
+    default: 50
+  },
+  regretPotential: {
+    type: Number,
+    min: [0, 'Regret potential must be between 0 and 100'],
+    max: [100, 'Regret potential must be between 0 and 100'],
+    default: 50
   }
 });
 
@@ -66,6 +80,46 @@ const decisionSchema = new Schema<IDecision>(
       type: String,
       enum: ['draft', 'active', 'resolved'],
       default: 'draft'
+    },
+    emotionalContext: {
+      initialStressLevel: {
+        type: Number,
+        min: [1, 'Stress level must be between 1 and 10'],
+        max: [10, 'Stress level must be between 1 and 10'],
+        default: 5
+      },
+      confidenceLevel: {
+        type: Number,
+        min: [1, 'Confidence level must be between 1 and 10'],
+        max: [10, 'Confidence level must be between 1 and 10'],
+        default: 5
+      },
+      urgencyRating: {
+        type: Number,
+        min: [1, 'Urgency rating must be between 1 and 10'],
+        max: [10, 'Urgency rating must be between 1 and 10'],
+        default: 5
+      },
+      valuesAlignment: [{
+        type: String
+      }]
+    },
+    visualPreferences: {
+      complexity: {
+        type: String,
+        enum: ['simple', 'detailed'],
+        default: 'simple'
+      },
+      viewMode: {
+        type: String,
+        enum: ['2d', '3d', 'auto'],
+        default: 'auto'
+      },
+      colorScheme: {
+        type: String,
+        enum: ['trust', 'balance', 'energy'],
+        default: 'trust'
+      }
     }
   },
   {

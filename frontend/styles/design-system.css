@@ -1,0 +1,376 @@
+/* DecisionTree Design System - 2024-2025 Psychology-Informed Architecture */
+
+:root {
+  /* Psychology-Informed Color System */
+  
+  /* Trust/Logic Colors (Financial Decisions) */
+  --trust-primary: #2563eb;
+  --trust-secondary: #3b82f6;
+  --trust-accent: #60a5fa;
+  --trust-surface: rgba(37, 99, 235, 0.1);
+  --trust-hover: rgba(37, 99, 235, 0.15);
+  
+  /* Balance Colors (Long-term Planning) */
+  --balance-primary: #059669;
+  --balance-secondary: #10b981;
+  --balance-accent: #34d399;
+  --balance-surface: rgba(5, 150, 105, 0.1);
+  --balance-hover: rgba(5, 150, 105, 0.15);
+  
+  /* Energy Colors (Creative Decisions) */
+  --energy-primary: #dc2626;
+  --energy-secondary: #ef4444;
+  --energy-accent: #f87171;
+  --energy-surface: rgba(220, 38, 38, 0.1);
+  --energy-hover: rgba(220, 38, 38, 0.15);
+  
+  /* Calm Technology Colors */
+  --calm-background: #121212;
+  --calm-surface: rgba(255, 255, 255, 0.05);
+  --calm-surface-hover: rgba(255, 255, 255, 0.08);
+  --calm-text: rgba(255, 255, 255, 0.87);
+  --calm-text-secondary: rgba(255, 255, 255, 0.6);
+  --calm-border: rgba(255, 255, 255, 0.12);
+  
+  /* Glassmorphism Foundation */
+  --glass-background: rgba(255, 255, 255, 0.1);
+  --glass-background-dark: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-border-dark: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
+  /* Claymorphism Foundation */
+  --clay-light: #f0f0f0;
+  --clay-dark: #cacaca;
+  --clay-shadow-positive: -20px -20px 60px #ffffff;
+  --clay-shadow-negative: 20px 20px 60px #bebebe;
+  
+  /* Stress-Reduction Spacing */
+  --breathing-space-xs: 0.5rem;
+  --breathing-space-sm: 1rem;
+  --breathing-space-md: 1.5rem;
+  --breathing-space-lg: 2rem;
+  --breathing-space-xl: 3rem;
+  
+  /* Calm Transitions */
+  --transition-gentle: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-confident: all 0.15s cubic-bezier(0.4, 0, 0.6, 1);
+  
+  /* Typography Scale for Cognitive Hierarchy */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  
+  /* Z-Index Scale for Progressive Disclosure */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* Dark Mode Adaptations */
+[data-theme="dark"] {
+  --glass-background: var(--glass-background-dark);
+  --glass-border: var(--glass-border-dark);
+  --glass-shadow: var(--glass-shadow-dark);
+}
+
+/* Glassmorphic Base Classes */
+@layer components {
+  .glassmorphic {
+    background: var(--glass-background);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-gentle);
+  }
+
+  .glassmorphic-card {
+    background: var(--glass-background);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-gentle);
+    border-radius: 16px;
+    padding: var(--breathing-space-lg);
+  }
+
+  .glassmorphic-surface {
+    background: var(--glass-background);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-gentle);
+    border-radius: 12px;
+    padding: var(--breathing-space-md);
+  }
+
+  .glassmorphic-panel {
+    background: var(--glass-background);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-gentle);
+    border-radius: 20px;
+    padding: var(--breathing-space-xl);
+  }
+
+  /* Claymorphic Node Components */
+  .claymorphic-node {
+    background: linear-gradient(145deg, var(--clay-light), var(--clay-dark));
+    box-shadow: var(--clay-shadow-negative), var(--clay-shadow-positive);
+    border-radius: 50px;
+    transition: var(--transition-gentle);
+    cursor: pointer;
+  }
+
+  .claymorphic-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      25px 25px 75px #bebebe, 
+      -25px -25px 75px #ffffff;
+  }
+
+  .claymorphic-node:active {
+    transform: translateY(1px);
+    box-shadow: 
+      15px 15px 45px #bebebe, 
+      -15px -15px 45px #ffffff;
+  }
+
+  /* Psychology-Informed Interactive States */
+  .confidence-high {
+    --current-color: var(--balance-primary);
+    border-color: var(--balance-accent);
+    background: var(--balance-surface);
+  }
+
+  .confidence-medium {
+    --current-color: var(--trust-primary);
+    border-color: var(--trust-accent);
+    background: var(--trust-surface);
+  }
+
+  .confidence-low {
+    --current-color: var(--energy-primary);
+    border-color: var(--energy-accent);
+    background: var(--energy-surface);
+  }
+}
+
+/* Stress-Reducing Hover States */
+.gentle-hover {
+  transition: var(--transition-gentle);
+}
+
+.gentle-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  background: var(--glass-background);
+}
+
+/* Progressive Disclosure Animation */
+.progressive-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressive-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.progressive-reveal.revealed:nth-child(1) { transition-delay: 0ms; }
+.progressive-reveal.revealed:nth-child(2) { transition-delay: 100ms; }
+.progressive-reveal.revealed:nth-child(3) { transition-delay: 200ms; }
+.progressive-reveal.revealed:nth-child(4) { transition-delay: 300ms; }
+.progressive-reveal.revealed:nth-child(5) { transition-delay: 400ms; }
+
+/* Emotional State Visual Indicators */
+.emotional-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.emotional-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--current-color), transparent);
+  transition: left 0.6s ease-in-out;
+}
+
+.emotional-indicator.active::before {
+  left: 100%;
+}
+
+/* Calm Technology Micro-interactions */
+.calm-button {
+  @apply glassmorphic;
+  border-radius: 8px;
+  padding: var(--breathing-space-sm) var(--breathing-space-md);
+  font-weight: 500;
+  transition: var(--transition-confident);
+  position: relative;
+  overflow: hidden;
+}
+
+.calm-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transition: all 0.3s ease-out;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.calm-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Nature-Inspired Animations */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes breathing {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.float-gentle {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+.pulse-subtle {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+.breathing-animation {
+  animation: breathing 6s ease-in-out infinite;
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .glassmorphic {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+  
+  .claymorphic-node {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Focus Indicators for Keyboard Navigation */
+.keyboard-focusable {
+  outline: none;
+  position: relative;
+}
+
+.keyboard-focusable:focus-visible {
+  outline: none;
+}
+
+.keyboard-focusable:focus-visible::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--trust-primary);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Stress Indicator Utilities */
+.stress-low { --stress-color: var(--balance-primary); }
+.stress-medium { --stress-color: var(--trust-primary); }
+.stress-high { --stress-color: var(--energy-primary); }
+
+.stress-indicator {
+  border-left: 3px solid var(--stress-color);
+  padding-left: var(--breathing-space-sm);
+  transition: var(--transition-gentle);
+}
+
+/* Typography Classes for Cognitive Hierarchy */
+.text-decision-primary {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--calm-text);
+}
+
+.text-decision-secondary {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--calm-text-secondary);
+}
+
+.text-factor {
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--calm-text);
+}
+
+.text-helper {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--calm-text-secondary);
+}
+
+/* Layout Utilities for Breathing Room */
+.breathing-space-xs { padding: var(--breathing-space-xs); }
+.breathing-space-sm { padding: var(--breathing-space-sm); }
+.breathing-space-md { padding: var(--breathing-space-md); }
+.breathing-space-lg { padding: var(--breathing-space-lg); }
+.breathing-space-xl { padding: var(--breathing-space-xl); }
+
+.gap-breathing-xs { gap: var(--breathing-space-xs); }
+.gap-breathing-sm { gap: var(--breathing-space-sm); }
+.gap-breathing-md { gap: var(--breathing-space-md); }
+.gap-breathing-lg { gap: var(--breathing-space-lg); }
+.gap-breathing-xl { gap: var(--breathing-space-xl); }

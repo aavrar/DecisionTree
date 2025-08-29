@@ -152,7 +152,7 @@ export function DecisionForm({ decision, onDecisionChange, onNotification }: Dec
   }
 
   return (
-    <Card className="hover-lift glassmorphism animate-float-up">
+    <Card className="glassmorphic hover-lift animate-float-up">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-primary animate-pulse" />

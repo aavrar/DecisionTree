@@ -11,7 +11,7 @@ import decisionRoutes from './routes/decisionRoutes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
