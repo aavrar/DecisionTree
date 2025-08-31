@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { StatsGrid } from "@/components/stats-grid"
-import { MultiStepDecisionForm } from "@/components/multi-step-form/MultiStepDecisionForm"
+import { DecisionForm } from "@/components/decision-form"
 import { VisualizationArea } from "@/components/visualization-area"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -116,10 +116,14 @@ export default function Dashboard() {
 
         <StatsGrid stats={mockStats} />
 
-        {/* Multi-Step Decision Form */}
+        {/* Decision Form */}
         <div className="flex justify-center">
-          <div className="w-full max-w-5xl">
-            <MultiStepDecisionForm />
+          <div className="w-full max-w-4xl">
+            <DecisionForm 
+              decision={currentDecision}
+              onDecisionChange={setCurrentDecision}
+              onNotification={addNotification}
+            />
           </div>
         </div>
 
