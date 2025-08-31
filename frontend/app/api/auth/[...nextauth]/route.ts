@@ -16,37 +16,11 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
-      // You can add custom logic here to save user to your backend
+      // For now, skip backend integration since it's causing connection issues
+      // TODO: Re-enable backend integration when deployed
       if (account?.provider === "google") {
-        try {
-          // Call backend API to create/update user
-          const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-          const response = await fetch(`${backendUrl}/api/auth/google-signin`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              googleId: account.providerAccountId,
-            }),
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            console.log('Backend auth successful:', data.message)
-            return true
-          } else {
-            const errorData = await response.text()
-            console.error('Backend auth failed:', response.status, errorData)
-            return false
-          }
-        } catch (error) {
-          console.error('Error calling backend during sign in:', error)
-          return false
-        }
+        console.log('Google OAuth successful for user:', user.email)
+        return true
       }
       return true
     },

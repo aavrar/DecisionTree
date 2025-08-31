@@ -53,7 +53,7 @@ export function Header() {
           <div className="flex items-center hover-tilt">
             <div className="relative">
               <h1 className="text-2xl font-bold text-shimmer animate-gradient-shift bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                DecisionTree
+                Branches
               </h1>
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary/30 rounded-full animate-bounce-subtle"></div>
               <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-accent/40 rounded-full animate-float"></div>

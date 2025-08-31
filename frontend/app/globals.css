@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color tokens to match DecisionTree design brief */
+  /* Updated color tokens to match Branches design brief */
   --background: oklch(1 0 0); /* Pure white background */
   --foreground: oklch(0.35 0 0); /* Dark gray text */
   --card: oklch(0.97 0 0); /* Light gray card background */
@@ -39,7 +39,7 @@
   --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.65 0.2 220 / 0.5);
 
-  /* Added custom gradient variables for DecisionTree */
+  /* Added custom gradient variables for Branches */
   --gradient-success: linear-gradient(135deg, oklch(0.65 0.2 220), oklch(0.6 0.18 180));
   --gradient-warning: linear-gradient(135deg, oklch(0.6 0.18 160), oklch(0.8 0.15 85));
   --gradient-danger: linear-gradient(135deg, oklch(0.55 0.25 330), oklch(0.8 0.15 85));
@@ -129,7 +129,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* Added custom utility classes for DecisionTree */
+  /* Added custom utility classes for Branches */
   .gradient-success {
     background: var(--gradient-success);
   }
@@ -489,5 +489,64 @@
     75% {
       border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
     }
+  }
+
+  /* NUCLEAR CSS OVERRIDE - Maximum Specificity Force Black Text */
+  
+  /* Target input elements with maximum specificity */
+  .glassmorphic-card input[data-slot="input"],
+  .glassmorphic-surface input[data-slot="input"], 
+  .glassmorphic-panel input[data-slot="input"],
+  .glassmorphic input[data-slot="input"],
+  input[data-slot="input"].glassmorphic,
+  input[data-slot="input"] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+  }
+  
+  /* Target textarea elements with maximum specificity */
+  .glassmorphic-card textarea[data-slot="textarea"],
+  .glassmorphic-surface textarea[data-slot="textarea"],
+  .glassmorphic-panel textarea[data-slot="textarea"], 
+  .glassmorphic textarea[data-slot="textarea"],
+  textarea[data-slot="textarea"].glassmorphic,
+  textarea[data-slot="textarea"] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+  }
+  
+  /* Override ALL possible inheritance paths */
+  .glassmorphic-card .glassmorphic input,
+  .glassmorphic-card .glassmorphic textarea,
+  .glassmorphic-card input,
+  .glassmorphic-card textarea {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Focus states with same specificity */
+  .glassmorphic-card input:focus,
+  .glassmorphic-card textarea:focus,
+  input[data-slot="input"]:focus,
+  textarea[data-slot="textarea"]:focus {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Override text color inheritance from parent elements */
+  .text-decision-primary input,
+  .text-decision-primary textarea,
+  .text-helper input, 
+  .text-helper textarea {
+    color: #000000 !important;
+  }
+  
+  /* Placeholder text visibility */
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280 !important;
+    opacity: 1 !important;
   }
 }

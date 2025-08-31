@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 const features = [
   {
     icon: Brain,
-    title: "AI-Powered Decision Trees",
+    title: "Smart Decision Trees",
     description: "Transform complex choices into clear, visual pathways with psychology-informed analysis."
   },
   {
@@ -35,12 +35,12 @@ const testimonials = [
   {
     name: "Sarah Chen",
     role: "Product Manager",
-    quote: "DecisionTree helped me navigate my career pivot with confidence. The future self feature was a game-changer."
+    quote: "Branches helped me navigate my career pivot with confidence. The future self feature was a game-changer."
   },
   {
     name: "Marcus Rodriguez",
     role: "Entrepreneur",
-    quote: "I make better business decisions 3x faster. The AI suggestions are incredibly insightful."
+    quote: "I make better business decisions 3x faster. The suggestions are incredibly insightful."
   },
   {
     name: "Dr. Emily Watson",
@@ -109,7 +109,7 @@ export default function SignupPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
             <Brain className="h-8 w-8 text-blue-400 animate-pulse" />
-            <span className="text-2xl font-bold text-white">DecisionTree</span>
+            <span className="text-2xl font-bold text-white">Branches</span>
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
               Beta 2025
             </Badge>
@@ -138,7 +138,7 @@ export default function SignupPage() {
                 </span>
               </h1>
               <p className="text-xl text-white/70 leading-relaxed">
-                Transform complex choices into clear paths forward with AI-powered decision trees, 
+                Transform complex choices into clear paths forward with decision trees, 
                 future self reflection, and psychology-informed guidance.
               </p>
             </div>

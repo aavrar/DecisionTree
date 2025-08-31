@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { StatsGrid } from "@/components/stats-grid"
-import { DecisionForm } from "@/components/decision-form"
+import { MultiStepDecisionForm } from "@/components/multi-step-form/MultiStepDecisionForm"
 import { VisualizationArea } from "@/components/visualization-area"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -90,8 +90,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50/20 via-purple-50/10 to-pink-50/20 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-pink-950/20 animate-gradient-shift pointer-events-none" />
 
-      <div className="fixed inset-0 pointer-events-none">
-        {Array.from({ length: 20 }).map((_, i) => (
+      <div className="fixed inset-0 pointer-events-none" suppressHydrationWarning>
+        {typeof window !== 'undefined' && Array.from({ length: 20 }).map((_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-float"
@@ -116,23 +116,20 @@ export default function Dashboard() {
 
         <StatsGrid stats={mockStats} />
 
-        <div
-          className={`grid gap-8 transition-all duration-500 ${splitScreenMode ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}
-        >
-          <DecisionForm
-            decision={currentDecision}
-            onDecisionChange={setCurrentDecision}
-            onNotification={addNotification}
-          />
-          <VisualizationArea decision={currentDecision} />
-
-          {splitScreenMode && (
-            <div className="glassmorphism rounded-xl p-6 hover-lift">
-              <h3 className="text-lg font-semibold mb-4">Comparison View</h3>
-              <p className="text-muted-foreground">Compare with previous decisions...</p>
-            </div>
-          )}
+        {/* Multi-Step Decision Form */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-5xl">
+            <MultiStepDecisionForm />
+          </div>
         </div>
+
+        {/* Visualization Area - Hidden for now during form completion */}
+        {/* TODO: Show this after form completion */}
+        {false && (
+          <div className="grid gap-8">
+            <VisualizationArea decision={currentDecision} />
+          </div>
+        )}
 
         <button
           onClick={() => setSplitScreenMode(!splitScreenMode)}
