@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles } from "lucide-react"
+import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles, Heart, Clock, TrendingUp } from "lucide-react"
 import type { Decision, Factor } from "@/types/decision"
 
 interface DecisionFormProps {
@@ -230,6 +230,140 @@ export function DecisionForm({ decision, onDecisionChange, onNotification }: Dec
             placeholder="Provide additional context about your decision..."
             className="glassmorphism min-h-[100px] hover:scale-[1.01] transition-transform focus:scale-[1.01]"
           />
+        </div>
+
+        {/* Emotional Context Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-red-400" />
+            <label className="text-sm font-medium">How Are You Feeling About This Decision?</label>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Understanding your emotional state helps us provide better guidance and reduces decision stress.
+          </p>
+          
+          <div className="grid gap-4">
+            {/* Confidence Level */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-blue-400" />
+                  <span className="text-sm font-medium">Confidence Level</span>
+                </div>
+                <Badge variant="secondary" className="animate-pulse">
+                  {decision.emotionalContext?.confidenceLevel || 5}/10
+                </Badge>
+              </div>
+              <Slider
+                value={[decision.emotionalContext?.confidenceLevel || 5]}
+                onValueChange={([value]) => updateDecision({
+                  emotionalContext: {
+                    ...decision.emotionalContext,
+                    confidenceLevel: value,
+                    urgencyRating: decision.emotionalContext?.urgencyRating || 5,
+                    initialStressLevel: decision.emotionalContext?.initialStressLevel || 5
+                  }
+                })}
+                max={10}
+                min={1}
+                step={1}
+                className="w-full hover:scale-[1.02] transition-transform"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Very Uncertain</span>
+                <span>Very Confident</span>
+              </div>
+            </div>
+
+            {/* Urgency Rating */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-orange-400" />
+                  <span className="text-sm font-medium">Time Pressure</span>
+                </div>
+                <Badge variant="secondary" className="animate-pulse">
+                  {decision.emotionalContext?.urgencyRating || 5}/10
+                </Badge>
+              </div>
+              <Slider
+                value={[decision.emotionalContext?.urgencyRating || 5]}
+                onValueChange={([value]) => updateDecision({
+                  emotionalContext: {
+                    ...decision.emotionalContext,
+                    urgencyRating: value,
+                    confidenceLevel: decision.emotionalContext?.confidenceLevel || 5,
+                    initialStressLevel: decision.emotionalContext?.initialStressLevel || 5
+                  }
+                })}
+                max={10}
+                min={1}
+                step={1}
+                className="w-full hover:scale-[1.02] transition-transform"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>No Rush</span>
+                <span>Very Urgent</span>
+              </div>
+            </div>
+
+            {/* Stress Level */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-red-400" />
+                  <span className="text-sm font-medium">Stress Level</span>
+                </div>
+                <Badge variant="secondary" className="animate-pulse">
+                  {decision.emotionalContext?.initialStressLevel || 5}/10
+                </Badge>
+              </div>
+              <Slider
+                value={[decision.emotionalContext?.initialStressLevel || 5]}
+                onValueChange={([value]) => updateDecision({
+                  emotionalContext: {
+                    ...decision.emotionalContext,
+                    initialStressLevel: value,
+                    confidenceLevel: decision.emotionalContext?.confidenceLevel || 5,
+                    urgencyRating: decision.emotionalContext?.urgencyRating || 5
+                  }
+                })}
+                max={10}
+                min={1}
+                step={1}
+                className="w-full hover:scale-[1.02] transition-transform"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Very Calm</span>
+                <span>Very Stressed</span>
+              </div>
+            </div>
+
+            {/* Emotional Insight */}
+            <div className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
+              <h4 className="text-sm font-medium mb-2 flex items-center">
+                <Heart className="h-4 w-4 mr-1 text-red-400" />
+                Emotional Insight
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {(() => {
+                  const confidence = decision.emotionalContext?.confidenceLevel || 5;
+                  const urgency = decision.emotionalContext?.urgencyRating || 5;
+                  const stress = decision.emotionalContext?.initialStressLevel || 5;
+                  
+                  if (stress >= 7 && urgency >= 7) {
+                    return "High stress + urgency detected. Consider taking time to calm down before deciding.";
+                  } else if (confidence <= 3 && urgency <= 3) {
+                    return "Low confidence detected. Consider gathering more information or talking to someone you trust.";
+                  } else if (confidence >= 7 && stress <= 3) {
+                    return "Great emotional state for decision making! You seem calm and confident.";
+                  } else {
+                    return "Understanding your emotional state helps create better decision strategies.";
+                  }
+                })()}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Factors with Drag and Drop */}

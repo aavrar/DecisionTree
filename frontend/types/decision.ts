@@ -51,3 +51,47 @@ export interface TreeNode {
   x?: number
   y?: number
 }
+
+// Enhanced user profiling from Phase 1 plan
+export interface UserProfile {
+  id: string
+  email: string
+  profile: {
+    decisionMakingStyle: "analytical" | "intuitive" | "balanced"
+    stressLevel: number // 1-10
+    preferredComplexity: "simple" | "moderate" | "complex"
+    emotionalState: {
+      confidence: number // 1-10
+      urgency: number // 1-10
+      anxiety: number // 1-10
+    }
+  }
+  gamification: {
+    level: number
+    xp: number
+    streak: number
+    badges: string[]
+    satisfactionHistory: { date: Date; score: number }[]
+  }
+}
+
+export interface PsychologicalProfile {
+  id: string
+  userId: string
+  cognitiveStyle: {
+    analyticalVsIntuitive: number // -100 to 100
+    riskTolerance: number // 1-10
+    timeOrientation: "past" | "present" | "future"
+    decisionSpeed: "deliberate" | "moderate" | "quick"
+  }
+  emotionalPatterns: {
+    stressTriggers: string[]
+    calmingElements: string[]
+    motivationalFactors: string[]
+  }
+  adaptedInterface: {
+    preferredComplexity: number // 1-5
+    optimalChoiceCount: number // 3-7
+    helpfulMicrointeractions: string[]
+  }
+}
