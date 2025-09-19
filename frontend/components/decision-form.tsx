@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles, Heart, Clock, TrendingUp } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles, Heart, Clock, TrendingUp, AlertTriangle, Timer } from "lucide-react"
 import type { Decision, Factor } from "@/types/decision"
 
 interface DecisionFormProps {
@@ -398,20 +399,123 @@ export function DecisionForm({ decision, onDecisionChange, onNotification }: Dec
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Importance</span>
-                  <Badge variant="secondary" className="animate-pulse">
-                    {factor.weight}%
-                  </Badge>
+              {/* Enhanced Factor Properties Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Importance Weight */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      Importance
+                    </span>
+                    <Badge variant="secondary" className="animate-pulse">
+                      {factor.weight}%
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[factor.weight]}
+                    onValueChange={([value]) => updateFactor(factor.id, { weight: value })}
+                    max={100}
+                    step={5}
+                    className="w-full hover:scale-[1.02] transition-transform"
+                  />
                 </div>
-                <Slider
-                  value={[factor.weight]}
-                  onValueChange={([value]) => updateFactor(factor.id, { weight: value })}
-                  max={100}
-                  step={5}
-                  className="w-full hover:scale-[1.02] transition-transform"
-                />
+
+                {/* Uncertainty Level */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Uncertainty
+                    </span>
+                    <Badge variant="outline" className="text-orange-600">
+                      {factor.uncertainty || 50}%
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[factor.uncertainty || 50]}
+                    onValueChange={([value]) => updateFactor(factor.id, { uncertainty: value })}
+                    max={100}
+                    step={5}
+                    className="w-full hover:scale-[1.02] transition-transform"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Very Certain</span>
+                    <span>Very Uncertain</span>
+                  </div>
+                </div>
+
+                {/* Emotional Weight */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3 w-3" />
+                      Emotional Impact
+                    </span>
+                    <Badge variant="outline" className="text-red-600">
+                      {factor.emotionalWeight || 50}%
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[factor.emotionalWeight || 50]}
+                    onValueChange={([value]) => updateFactor(factor.id, { emotionalWeight: value })}
+                    max={100}
+                    step={5}
+                    className="w-full hover:scale-[1.02] transition-transform"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Purely Logical</span>
+                    <span>Highly Emotional</span>
+                  </div>
+                </div>
+
+                {/* Regret Potential */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <Brain className="h-3 w-3" />
+                      Regret Risk
+                    </span>
+                    <Badge variant="outline" className="text-purple-600">
+                      {factor.regretPotential || 50}%
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[factor.regretPotential || 50]}
+                    onValueChange={([value]) => updateFactor(factor.id, { regretPotential: value })}
+                    max={100}
+                    step={5}
+                    className="w-full hover:scale-[1.02] transition-transform"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>No Regret Risk</span>
+                    <span>High Regret Risk</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Horizon */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-blue-400" />
+                  <span className="text-sm font-medium">When will this matter most?</span>
+                </div>
+                <Select
+                  value={factor.timeHorizon || "medium"}
+                  onValueChange={(value: "immediate" | "short" | "medium" | "long") => 
+                    updateFactor(factor.id, { timeHorizon: value })
+                  }
+                >
+                  <SelectTrigger className="glassmorphism">
+                    <SelectValue placeholder="Select time horizon" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="immediate">Immediate (days)</SelectItem>
+                    <SelectItem value="short">Short-term (weeks)</SelectItem>
+                    <SelectItem value="medium">Medium-term (months)</SelectItem>
+                    <SelectItem value="long">Long-term (years)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           ))}
