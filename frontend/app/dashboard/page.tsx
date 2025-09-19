@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { StatsGrid } from "@/components/stats-grid"
 import { DecisionForm } from "@/components/decision-form"
+import { TreeVisualization } from "@/components/tree-visualization"
 import { VisualizationArea } from "@/components/visualization-area"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -124,6 +125,13 @@ export default function Dashboard() {
               onDecisionChange={setCurrentDecision}
               onNotification={addNotification}
             />
+          </div>
+        </div>
+
+        {/* Decision Tree Visualization */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-5xl">
+            <TreeVisualization decision={currentDecision} />
           </div>
         </div>
 

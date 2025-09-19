@@ -52,6 +52,39 @@ export interface TreeNode {
   y?: number
 }
 
+// Enhanced tree node types for decision visualization
+export interface DecisionTreeNode {
+  id: string
+  label: string
+  type: "decision" | "factor"
+  x: number
+  y: number
+  // Factor-specific properties
+  factor?: Factor
+  // Visual properties
+  size?: number
+  color?: string
+  borderStyle?: "solid" | "dashed"
+  borderWidth?: number
+}
+
+export interface DecisionTree {
+  root: DecisionTreeNode
+  factors: DecisionTreeNode[]
+  connections: TreeConnection[]
+  bounds: {
+    width: number
+    height: number
+  }
+}
+
+export interface TreeConnection {
+  id: string
+  from: DecisionTreeNode
+  to: DecisionTreeNode
+  path: string // SVG path string
+}
+
 // Enhanced user profiling from Phase 1 plan
 export interface UserProfile {
   id: string
