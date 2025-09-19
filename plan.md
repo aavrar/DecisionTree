@@ -347,3 +347,79 @@ const ClaymorphicNode = {
 - **Human-Centered Innovation**: Tool that feels both advanced and deeply supportive
 
 This comprehensive plan positions DecisionTree as a genuinely innovative choice architecture visualizer that pushes technological boundaries while remaining profoundly supportive of human decision-making processes, creating an interface that feels both cutting-edge and fundamentally human.
+
+## Extra Credit Features
+
+### Tier 1: Game-Changing Features
+
+**3D Interactive Decision Cosmos**
+- Transform flat tree into immersive 3D space using Three.js
+- Factors orbit around central decision like planets
+- Zoom through "decision space" with gesture controls
+- VR-like experience in browser
+
+**AI Decision Psychology Engine**
+- Real-time bias detection ("You might be suffering from anchoring bias")
+- Decision regret prediction scoring based on factors
+- Cognitive load warnings when decisions become too complex
+- Smart factor suggestions based on decision type + psychological patterns
+
+**Temporal Decision Lens**
+- "Future Self Simulator" - how will you feel about this in 1 year, 5 years, 10 years
+- Decision timeline showing impact over time horizons
+- Regret-minimization algorithm recommendations
+- "Past Self Wisdom" - learn from previous similar decisions
+
+### Tier 2: Technically Impressive
+
+**Voice-Controlled Decision Creation**
+- "Hey DecisionTree, help me decide whether to change careers"
+- Speech-to-factor conversion with natural language processing
+- Accessibility meets cutting-edge UX design
+- Modern interaction paradigms
+
+**Decision Emotional Intelligence**
+- Real-time stress/confidence tracking during decision creation
+- Emotional journey visualization through decision process
+- Mood-based decision recommendations
+- Integration with psychological research on decision-making under stress
+
+**Collaborative Decision Intelligence**
+- Share decisions with trusted advisors (anonymized links)
+- Crowd-source factor importance from similar decisions
+- "Decision Mentor" matching with experienced decision-makers
+- Group decision-making with weighted voting
+
+### Tier 3: Professional Grade
+
+**Decision Portfolio Analytics**
+- Personal decision-making style analysis (analytical vs intuitive)
+- Pattern recognition across all user decisions
+- "Decision DNA" profile showing cognitive preferences
+- Performance tracking: satisfaction rates, regret patterns
+
+**Advanced Export & Reporting**
+- Professional PDF decision reports for important choices
+- Integration with Google Calendar for decision deadlines
+- Decision journal with reflection prompts
+- Export to project management tools
+
+**Decision Coaching AI**
+- Real-time suggestions as users build decisions
+- Guided decision-making for overwhelmed users
+- Progressive disclosure based on user expertise
+- Educational content about decision psychology
+
+### Tier 4: Research-Level Innovation
+
+**Quantum Decision Modeling**
+- Model decision uncertainty using quantum superposition concepts
+- Multiple parallel decision paths visualization
+- Probability clouds around outcomes
+- Academic-level innovation that could become research
+
+**Neuro-Decision Interface**
+- Integration with simple biometric data (if accessible)
+- Stress level detection during decision-making
+- Optimal decision timing based on cognitive load
+- Next-generation human-computer interaction
