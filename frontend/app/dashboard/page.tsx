@@ -8,6 +8,7 @@ import { StatsGrid } from "@/components/stats-grid"
 import { DecisionForm } from "@/components/decision-form"
 import { TreeVisualization } from "@/components/tree-visualization"
 import { DecisionCosmos3D } from "@/components/decision-cosmos-3d"
+import { DecisionCosmosPopup } from "@/components/decision-cosmos-popup"
 import { VisualizationArea } from "@/components/visualization-area"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -44,7 +45,7 @@ export default function Dashboard() {
   const [currentDecision, setCurrentDecision] = useState<Decision>(mockDecision)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [splitScreenMode, setSplitScreenMode] = useState(false)
-  const [view3D, setView3D] = useState(false)
+  const [show3DPopup, setShow3DPopup] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
 
   useEffect(() => {
@@ -137,39 +138,25 @@ export default function Dashboard() {
             <div className="flex justify-center">
               <div className="bg-gray-800/90 backdrop-blur-md rounded-lg p-1 border border-gray-600/50 shadow-lg">
                 <button
-                  onClick={() => setView3D(false)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    !view3D
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-                  }`}
+                  onClick={() => {}}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-all bg-blue-600 text-white shadow-sm"
                 >
                   2D Tree
                 </button>
                 <button
                   onClick={() => {
-                    setView3D(true)
-                    if (!view3D) {
-                      addNotification("🚀 Switched to 3D Cosmos view! Click and drag to explore.", "success")
-                    }
+                    setShow3DPopup(true)
+                    addNotification("🚀 Opening 3D Cosmos in full-screen mode!", "success")
                   }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    view3D
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-                  }`}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-all bg-purple-600 text-white hover:bg-purple-700"
                 >
-                  3D Cosmos
+                  🌌 3D Cosmos
                 </button>
               </div>
             </div>
 
-            {/* Visualization Component */}
-            {view3D ? (
-              <DecisionCosmos3D decision={currentDecision} width={800} height={600} />
-            ) : (
-              <TreeVisualization decision={currentDecision} />
-            )}
+            {/* Visualization Component - Always 2D Tree */}
+            <TreeVisualization decision={currentDecision} />
           </div>
         </div>
 
@@ -199,6 +186,13 @@ export default function Dashboard() {
       />
 
       <NotificationSystem notifications={notifications} />
+
+      {/* 3D Cosmos Popup */}
+      <DecisionCosmosPopup
+        decision={currentDecision}
+        isOpen={show3DPopup}
+        onClose={() => setShow3DPopup(false)}
+      />
     </div>
   )
 }

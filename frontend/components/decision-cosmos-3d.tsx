@@ -304,7 +304,7 @@ function ConnectionLines({ factors }: { factors: any[] }) {
         const factor = factors[index]
         if (factor && line instanceof THREE.Line) {
           const orbitRadius = 2 + (index * 0.5)
-          const orbitSpeed = 0.3 + (factor.weight / 1000)
+          const orbitSpeed = (0.3 + (factor.weight / 1000)) * 0.5 // Slower orbit speed (halved)
           const startAngle = (index / factors.length) * Math.PI * 2
 
           // Update line geometry to follow orbiting spheres
@@ -424,7 +424,7 @@ function Scene({
 
   const factorSpheres = factors.map((factor, index) => {
     const orbitRadius = 2 + (index * 0.5) // Spiral outward
-    const orbitSpeed = 0.3 + (factor.weight / 1000) // Faster orbit for higher weight
+    const orbitSpeed = (0.3 + (factor.weight / 1000)) * 0.5 // Slower orbit speed (halved)
     const yPosition = (index % 2) * 0.5 - 0.25 // Slight vertical offset
     const startAngle = (index / factors.length) * Math.PI * 2 // Evenly distribute around circle
 
