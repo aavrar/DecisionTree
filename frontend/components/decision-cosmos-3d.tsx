@@ -1,15 +1,56 @@
 "use client"
 
 import React, { useRef, useMemo, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Text, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Decision } from '@/types/decision'
+
+// Adventure game types
+type AdventureNode = 'start' | 'decision' | string // factor IDs
+type AdventureState = {
+  currentNode: AdventureNode
+  visitedNodes: AdventureNode[]
+  isAdventureMode: boolean
+  journeyComplete: boolean
+}
 
 interface DecisionCosmos3DProps {
   decision: Decision
   width?: number
   height?: number
+}
+
+// Camera controller for adventure mode
+function AdventureCameraController({
+  targetPosition,
+  adventureState,
+  onTransitionComplete
+}: {
+  targetPosition: THREE.Vector3
+  adventureState: AdventureState
+  onTransitionComplete?: () => void
+}) {
+  const { camera } = useThree()
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  useFrame((state, delta) => {
+    if (adventureState.isAdventureMode && targetPosition) {
+      const distance = camera.position.distanceTo(targetPosition)
+
+      if (distance > 0.1) {
+        // Smooth camera movement
+        camera.position.lerp(targetPosition, delta * 2)
+        camera.lookAt(0, 0, 0) // Always look at center
+        setIsTransitioning(true)
+      } else if (isTransitioning) {
+        setIsTransitioning(false)
+        onTransitionComplete?.()
+      }
+    }
+  })
+
+  return null
 }
 
 // Factor sphere component that orbits around the center
@@ -19,6 +60,8 @@ function FactorSphere({
   orbitRadius,
   orbitSpeed,
   startAngle,
+  adventureState,
+  allFactors,
   onClick
 }: {
   factor: any
@@ -26,6 +69,8 @@ function FactorSphere({
   orbitRadius: number
   orbitSpeed: number
   startAngle: number
+  adventureState: AdventureState
+  allFactors: any[]
   onClick?: () => void
 }) {
   const meshRef = useRef<THREE.Mesh>(null!)
@@ -77,6 +122,16 @@ function FactorSphere({
 
   const sphereSize = 0.2 + (factor.weight / 100) * 0.3 // 0.2 to 0.5 based on weight
 
+  // Calculate relative percentage
+  const totalWeight = allFactors.reduce((sum, f) => sum + f.weight, 0)
+  const relativePercentage = totalWeight > 0 ? Math.round((factor.weight / totalWeight) * 100) : 0
+
+  // Adventure mode states
+  const isCurrentNode = adventureState.currentNode === factor.id
+  const isVisited = adventureState.visitedNodes.includes(factor.id)
+  const isClickable = adventureState.isAdventureMode &&
+    (adventureState.currentNode === 'decision' || adventureState.currentNode === 'start')
+
   return (
     <group>
       <Sphere
@@ -86,16 +141,36 @@ function FactorSphere({
         onClick={onClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        scale={hovered ? 1.2 : 1}
+        scale={isCurrentNode ? 1.5 : (hovered || isClickable) ? 1.2 : 1}
       >
         <meshStandardMaterial
-          color={getCategoryColor(factor.category)}
-          emissive={getCategoryColor(factor.category)}
-          emissiveIntensity={hovered ? 0.3 : 0.1}
+          color={
+            isCurrentNode ? "#ffd700" : // Gold for current
+            isVisited ? "#90EE90" : // Light green for visited
+            getCategoryColor(factor.category)
+          }
+          emissive={
+            isCurrentNode ? "#ffd700" :
+            isVisited ? "#90EE90" :
+            getCategoryColor(factor.category)
+          }
+          emissiveIntensity={
+            isCurrentNode ? 0.5 :
+            isVisited ? 0.3 :
+            hovered ? 0.3 : 0.1
+          }
           transparent
-          opacity={0.9}
+          opacity={isClickable ? 1.0 : 0.9}
         />
       </Sphere>
+
+      {/* Adventure mode indicator ring */}
+      {isClickable && (
+        <mesh position={meshRef.current?.position || [0, 0, 0]}>
+          <torusGeometry args={[sphereSize + 0.1, 0.02, 8, 16]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+        </mesh>
+      )}
 
       {/* Factor label - follows sphere position */}
       <group ref={labelRef}>
@@ -118,7 +193,7 @@ function FactorSphere({
           anchorX="center"
           anchorY="middle"
         >
-          {factor.weight}%
+          {relativePercentage}%
         </Text>
       </group>
     </group>
@@ -126,16 +201,29 @@ function FactorSphere({
 }
 
 // Central decision sphere
-function DecisionSphere({ decision, onClick }: { decision: Decision, onClick?: () => void }) {
+function DecisionSphere({
+  decision,
+  adventureState,
+  onClick
+}: {
+  decision: Decision
+  adventureState: AdventureState
+  onClick?: () => void
+}) {
   const meshRef = useRef<THREE.Mesh>(null!)
   const textRef = useRef<THREE.Group>(null!)
   const [hovered, setHovered] = useState(false)
+
+  // Adventure mode states
+  const isCurrentNode = adventureState.currentNode === 'decision'
+  const isStartNode = adventureState.currentNode === 'start'
+  const isClickable = adventureState.isAdventureMode && (isStartNode || adventureState.visitedNodes.length > 0)
 
   useFrame((state) => {
     if (meshRef.current) {
       // Gentle pulsing
       const pulse = 1 + Math.sin(state.clock.getElapsedTime() * 2) * 0.05
-      meshRef.current.scale.setScalar(pulse)
+      meshRef.current.scale.setScalar(pulse * (isCurrentNode ? 1.2 : 1))
 
       // Slow rotation for sphere only
       meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.2
@@ -159,15 +247,35 @@ function DecisionSphere({ decision, onClick }: { decision: Decision, onClick?: (
         onPointerOut={() => setHovered(false)}
       >
         <meshStandardMaterial
-          color="#4f46e5"
-          emissive="#4f46e5"
-          emissiveIntensity={hovered ? 0.4 : 0.2}
+          color={
+            isCurrentNode ? "#ffd700" : // Gold when current
+            isStartNode ? "#ff6b6b" : // Red when starting point
+            "#4f46e5" // Default blue
+          }
+          emissive={
+            isCurrentNode ? "#ffd700" :
+            isStartNode ? "#ff6b6b" :
+            "#4f46e5"
+          }
+          emissiveIntensity={
+            isCurrentNode ? 0.6 :
+            isStartNode ? 0.4 :
+            hovered ? 0.4 : 0.2
+          }
           transparent
           opacity={0.9}
           roughness={0.2}
           metalness={0.1}
         />
       </Sphere>
+
+      {/* Adventure mode indicator ring for decision sphere */}
+      {isClickable && !isCurrentNode && (
+        <mesh position={[0, 0, 0]}>
+          <torusGeometry args={[1.0, 0.03, 8, 32]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+        </mesh>
+      )}
 
       {/* Decision title - always faces camera */}
       <group ref={textRef} position={[0, 1.2, 0]}>
@@ -280,8 +388,39 @@ function ParticleField() {
 }
 
 // Main 3D scene
-function Scene({ decision }: { decision: Decision }) {
+function Scene({
+  decision,
+  adventureState,
+  onNodeClick,
+  onAdventureModeToggle
+}: {
+  decision: Decision
+  adventureState: AdventureState
+  onNodeClick: (nodeId: AdventureNode) => void
+  onAdventureModeToggle: () => void
+}) {
   const factors = decision.factors || []
+
+  // Calculate camera target position based on current node
+  const getCameraPosition = (nodeId: AdventureNode): THREE.Vector3 => {
+    if (nodeId === 'start' || nodeId === 'decision') {
+      return new THREE.Vector3(5, 3, 5) // Default view
+    }
+
+    // Find factor position
+    const factorIndex = factors.findIndex(f => f.id === nodeId)
+    if (factorIndex !== -1) {
+      const orbitRadius = 2 + (factorIndex * 0.5)
+      const startAngle = (factorIndex / factors.length) * Math.PI * 2
+      return new THREE.Vector3(
+        Math.cos(startAngle) * (orbitRadius + 2),
+        2,
+        Math.sin(startAngle) * (orbitRadius + 2)
+      )
+    }
+
+    return new THREE.Vector3(5, 3, 5)
+  }
 
   const factorSpheres = factors.map((factor, index) => {
     const orbitRadius = 2 + (index * 0.5) // Spiral outward
@@ -297,7 +436,9 @@ function Scene({ decision }: { decision: Decision }) {
         orbitRadius={orbitRadius}
         orbitSpeed={orbitSpeed}
         startAngle={startAngle}
-        onClick={() => console.log('Factor clicked:', factor.name)}
+        adventureState={adventureState}
+        allFactors={factors}
+        onClick={() => onNodeClick(factor.id)}
       />
     )
   })
@@ -315,23 +456,31 @@ function Scene({ decision }: { decision: Decision }) {
       {/* Connection lines */}
       <ConnectionLines factors={factors} />
 
+      {/* Adventure camera controller */}
+      <AdventureCameraController
+        targetPosition={getCameraPosition(adventureState.currentNode)}
+        adventureState={adventureState}
+      />
+
       {/* Central decision sphere */}
       <DecisionSphere
         decision={decision}
-        onClick={() => console.log('Decision clicked:', decision.title)}
+        adventureState={adventureState}
+        onClick={() => onNodeClick('decision')}
       />
 
       {/* Factor spheres */}
       {factorSpheres}
 
-      {/* Camera controls */}
+      {/* Camera controls - disabled in adventure mode */}
       <OrbitControls
+        enabled={!adventureState.isAdventureMode}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
         minDistance={3}
         maxDistance={15}
-        autoRotate={true}
+        autoRotate={!adventureState.isAdventureMode}
         autoRotateSpeed={0.5}
         dampingFactor={0.05}
         enableDamping={true}
@@ -343,10 +492,53 @@ function Scene({ decision }: { decision: Decision }) {
 export function DecisionCosmos3D({ decision, width = 800, height = 600 }: DecisionCosmos3DProps) {
   const [mounted, setMounted] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [adventureState, setAdventureState] = React.useState<AdventureState>({
+    currentNode: 'start',
+    visitedNodes: [],
+    isAdventureMode: false,
+    journeyComplete: false
+  })
 
   React.useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleNodeClick = (nodeId: AdventureNode) => {
+    if (!adventureState.isAdventureMode) return
+
+    setAdventureState(prev => {
+      const newVisited = [...prev.visitedNodes]
+      if (!newVisited.includes(nodeId)) {
+        newVisited.push(nodeId)
+      }
+
+      return {
+        ...prev,
+        currentNode: nodeId,
+        visitedNodes: newVisited,
+        journeyComplete: nodeId === 'decision' && newVisited.length >= decision.factors.length
+      }
+    })
+  }
+
+  const toggleAdventureMode = () => {
+    setAdventureState(prev => ({
+      ...prev,
+      isAdventureMode: !prev.isAdventureMode,
+      currentNode: prev.isAdventureMode ? 'start' : prev.currentNode,
+      visitedNodes: prev.isAdventureMode ? [] : prev.visitedNodes,
+      journeyComplete: false
+    }))
+  }
+
+  const resetAdventure = () => {
+    setAdventureState(prev => ({
+      ...prev,
+      currentNode: 'start',
+      visitedNodes: [],
+      journeyComplete: false
+    }))
+  }
 
   if (!decision.title && decision.factors.length === 0) {
     return (
@@ -382,15 +574,79 @@ export function DecisionCosmos3D({ decision, width = 800, height = 600 }: Decisi
     )
   }
 
+  const getCurrentNodeInfo = () => {
+    if (adventureState.currentNode === 'start') {
+      return {
+        title: "🚀 Start Your Decision Journey",
+        description: "Click on any factor planet to begin exploring your decision space"
+      }
+    }
+    if (adventureState.currentNode === 'decision') {
+      return {
+        title: "🎯 Decision Center",
+        description: adventureState.journeyComplete
+          ? "🎉 Journey Complete! You've explored all factors."
+          : "You've reached the decision center. Continue exploring factors to complete your journey."
+      }
+    }
+
+    const factor = decision.factors.find(f => f.id === adventureState.currentNode)
+
+    // Calculate relative percentage like in 2D view
+    const totalWeight = decision.factors.reduce((sum, f) => sum + f.weight, 0)
+    const relativePercentage = totalWeight > 0 ? Math.round((factor?.weight || 0) / totalWeight * 100) : 0
+
+    return {
+      title: `🪐 ${factor?.name || 'Unknown Factor'}`,
+      description: `Relative Weight: ${relativePercentage}% • Category: ${factor?.category}`
+    }
+  }
+
+  const nodeInfo = getCurrentNodeInfo()
+
   return (
-    <div className="w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg border shadow-sm overflow-hidden">
+    <div className="w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg border shadow-sm overflow-hidden relative">
       <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">3D Decision Cosmos</h3>
-        <p className="text-sm text-gray-600">
-          Interactive 3D visualization • {decision.factors.length} factors orbiting your decision •
-          Click and drag to explore
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">3D Decision Cosmos</h3>
+            <p className="text-sm text-gray-600">
+              {adventureState.isAdventureMode
+                ? `Adventure Mode • ${adventureState.visitedNodes.length}/${decision.factors.length} factors explored`
+                : `Interactive 3D visualization • ${decision.factors.length} factors orbiting your decision`
+              }
+            </p>
+          </div>
+          <button
+            onClick={toggleAdventureMode}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              adventureState.isAdventureMode
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-purple-600 text-white hover:bg-purple-700'
+            }`}
+          >
+            {adventureState.isAdventureMode ? '🌌 Exit Adventure' : '🎮 Adventure Mode'}
+          </button>
+        </div>
       </div>
+
+      {/* Adventure Mode UI Overlay */}
+      {adventureState.isAdventureMode && (
+        <div className="absolute top-20 left-4 right-4 z-10 bg-black/80 backdrop-blur-md rounded-lg p-4 text-white">
+          <div className="flex justify-between items-center">
+            <div>
+              <h4 className="text-lg font-semibold">{nodeInfo.title}</h4>
+              <p className="text-sm text-gray-300">{nodeInfo.description}</p>
+            </div>
+            <button
+              onClick={resetAdventure}
+              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm"
+            >
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ width: '100%', height: height }}>
         <Canvas
@@ -407,7 +663,12 @@ export function DecisionCosmos3D({ decision, width = 800, height = 600 }: Decisi
             </div>
           }
         >
-          <Scene decision={decision} />
+          <Scene
+            decision={decision}
+            adventureState={adventureState}
+            onNodeClick={handleNodeClick}
+            onAdventureModeToggle={toggleAdventureMode}
+          />
         </Canvas>
       </div>
     </div>
