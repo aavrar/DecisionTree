@@ -7,6 +7,7 @@ import { Header } from "@/components/header"
 import { StatsGrid } from "@/components/stats-grid"
 import { DecisionForm } from "@/components/decision-form"
 import { TreeVisualization } from "@/components/tree-visualization"
+import { DecisionCosmos3D } from "@/components/decision-cosmos-3d"
 import { VisualizationArea } from "@/components/visualization-area"
 import { CommandPalette } from "@/components/command-palette"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const [currentDecision, setCurrentDecision] = useState<Decision>(mockDecision)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [splitScreenMode, setSplitScreenMode] = useState(false)
+  const [view3D, setView3D] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
 
   useEffect(() => {
@@ -128,10 +130,46 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Decision Tree Visualization */}
+        {/* Decision Visualization */}
         <div className="flex justify-center">
-          <div className="w-full max-w-5xl">
-            <TreeVisualization decision={currentDecision} />
+          <div className="w-full max-w-5xl space-y-4">
+            {/* 2D/3D Toggle */}
+            <div className="flex justify-center">
+              <div className="bg-gray-800/90 backdrop-blur-md rounded-lg p-1 border border-gray-600/50 shadow-lg">
+                <button
+                  onClick={() => setView3D(false)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    !view3D
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
+                  }`}
+                >
+                  2D Tree
+                </button>
+                <button
+                  onClick={() => {
+                    setView3D(true)
+                    if (!view3D) {
+                      addNotification("🚀 Switched to 3D Cosmos view! Click and drag to explore.", "success")
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    view3D
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
+                  }`}
+                >
+                  3D Cosmos
+                </button>
+              </div>
+            </div>
+
+            {/* Visualization Component */}
+            {view3D ? (
+              <DecisionCosmos3D decision={currentDecision} width={800} height={600} />
+            ) : (
+              <TreeVisualization decision={currentDecision} />
+            )}
           </div>
         </div>
 
