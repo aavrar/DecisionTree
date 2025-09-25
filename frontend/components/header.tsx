@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Search, Bell, User, Zap } from "lucide-react"
+import { Menu, X, Search, Bell, User, Zap, LogOut } from "lucide-react"
+import { signOut, useSession } from "next-auth/react"
 
 const navItems = [
   { name: "New Decision", href: "#", active: false, icon: Zap },
@@ -12,9 +13,14 @@ const navItems = [
 ]
 
 export function Header() {
+  const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [notifications, setNotifications] = useState(3)
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/' })
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 2000)
@@ -122,6 +128,19 @@ export function Header() {
               </div>
             </Button>
 
+            {/* Logout Button */}
+            {session && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="hover:scale-110 transition-all duration-300 btn-magnetic glassmorphism-subtle text-muted-foreground hover:text-red-500"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
+
             {/* Mobile menu button */}
             <Button
               variant="ghost"
@@ -174,6 +193,17 @@ export function Header() {
                   />
                 </div>
               </div>
+
+              {/* Mobile logout button */}
+              {session && (
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 rounded-lg flex items-center space-x-2 text-muted-foreground hover:text-red-500 hover:bg-red-50/5"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              )}
             </nav>
           </div>
         )}
