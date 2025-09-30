@@ -194,16 +194,18 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
   }
 
   return (
-    <Card className="glassmorphic hover-lift animate-float-up">
+    <Card className="glassmorphism-strong border-slate-700/50 hover-lift animate-float-up">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary animate-pulse" />
+        <CardTitle className="flex items-center gap-2 text-white">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
+            <Brain className="h-5 w-5 text-white" />
+          </div>
           Decision Input
           <Button
             variant="ghost"
             size="sm"
             onClick={generateAISuggestions}
-            className="ml-auto hover:scale-105 transition-transform"
+            className="ml-auto hover:scale-105 transition-all bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-white border-purple-500/30"
           >
             <Sparkles className="h-4 w-4 mr-1" />
             AI Assist
@@ -213,9 +215,9 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
       <CardContent className="space-y-6">
         {/* AI Suggestions */}
         {aiSuggestions.length > 0 && (
-          <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200/50 dark:border-blue-800/50">
-            <h4 className="text-sm font-medium mb-2 flex items-center">
-              <Sparkles className="h-4 w-4 mr-1 text-blue-500" />
+          <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 backdrop-blur-sm animate-float-up">
+            <h4 className="text-sm font-medium mb-2 flex items-center text-white">
+              <Sparkles className="h-4 w-4 mr-1 text-blue-400" />
               AI Suggestions
             </h4>
             <div className="space-y-1">
@@ -232,7 +234,7 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
                     updateDecision({ factors: [...decision.factors, newFactor] })
                     onNotification("AI suggestion added as factor!", "success")
                   }}
-                  className="block w-full text-left text-xs p-2 rounded hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="block w-full text-left text-xs p-2 rounded hover:bg-slate-700/50 transition-all hover:scale-[1.02] text-slate-300 hover:text-white"
                 >
                   + {suggestion}
                 </button>
@@ -243,7 +245,7 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
 
         {/* Decision Question */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Decision Question</label>
+          <label className="text-sm font-medium text-slate-200">Decision Question</label>
           <Input
             value={decision.title}
             onChange={(e) => updateDecision({ title: e.target.value })}
@@ -255,12 +257,12 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
         {/* Context with Voice Input */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Context</label>
+            <label className="text-sm font-medium text-slate-200">Context</label>
             <Button
               variant="ghost"
               size="sm"
               onClick={isListening ? stopVoiceInput : startVoiceInput}
-              className={`hover:scale-105 transition-all ${isListening ? "text-red-500 animate-pulse" : ""}`}
+              className={`hover:scale-105 transition-all ${isListening ? "text-red-400 animate-pulse bg-red-500/20" : "text-slate-300 hover:text-white hover:bg-slate-700/50"}`}
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               {isListening ? "Stop" : "Voice"}
@@ -270,17 +272,17 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
             value={decision.description}
             onChange={(e) => updateDecision({ description: e.target.value })}
             placeholder="Provide additional context about your decision..."
-            className="glassmorphism min-h-[100px] hover:scale-[1.01] transition-transform focus:scale-[1.01]"
+            className="glassmorphism min-h-[100px] hover:scale-[1.01] transition-transform focus:scale-[1.01] bg-slate-800/50 border-slate-600/50 text-white"
           />
         </div>
 
         {/* Emotional Context Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 p-4 rounded-lg bg-slate-800/30 border border-slate-700/50">
           <div className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-red-400" />
-            <label className="text-sm font-medium">How Are You Feeling About This Decision?</label>
+            <label className="text-sm font-medium text-white">How Are You Feeling About This Decision?</label>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-400">
             Understanding your emotional state helps us provide better guidance and reduces decision stress.
           </p>
           
@@ -290,9 +292,9 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Brain className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm font-medium">Confidence Level</span>
+                  <span className="text-sm font-medium text-slate-200">Confidence Level</span>
                 </div>
-                <Badge variant="secondary" className="animate-pulse">
+                <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
                   {decision.emotionalContext?.confidenceLevel || 5}/10
                 </Badge>
               </div>
@@ -311,7 +313,7 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
                 step={1}
                 className="w-full hover:scale-[1.02] transition-transform"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-xs text-slate-500">
                 <span>Very Uncertain</span>
                 <span>Very Confident</span>
               </div>
@@ -322,9 +324,9 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-orange-400" />
-                  <span className="text-sm font-medium">Time Pressure</span>
+                  <span className="text-sm font-medium text-slate-200">Time Pressure</span>
                 </div>
-                <Badge variant="secondary" className="animate-pulse">
+                <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
                   {decision.emotionalContext?.urgencyRating || 5}/10
                 </Badge>
               </div>
@@ -343,7 +345,7 @@ export function DecisionForm({ decision, onDecisionChange, onNotification, onSav
                 step={1}
                 className="w-full hover:scale-[1.02] transition-transform"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-xs text-slate-500">
                 <span>No Rush</span>
                 <span>Very Urgent</span>
               </div>

@@ -43,45 +43,57 @@ export function GamificationPanel({ onNotification }: GamificationPanelProps) {
   }, [nextLevelXp, onNotification])
 
   return (
-    <Card className="glassmorphism hover-lift">
+    <Card className="glassmorphism-strong hover-lift border-slate-700/50 animate-float-up">
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
+        <CardTitle className="flex items-center space-x-2 text-white">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500">
+            <Trophy className="h-5 w-5 text-white" />
+          </div>
           <span>Your Progress</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Level {level}</p>
-            <p className="text-2xl font-bold gradient-success bg-clip-text text-transparent">{xp} XP</p>
+            <p className="text-sm text-slate-400">Level {level}</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{xp} XP</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Decision Streak</p>
-            <p className="text-2xl font-bold gradient-warning bg-clip-text text-transparent">{streak} days</p>
+            <p className="text-sm text-slate-400">Decision Streak</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">{streak} 🔥</p>
           </div>
         </div>
 
         <div>
-          <div className="flex justify-between text-sm mb-1">
+          <div className="flex justify-between text-sm mb-2 text-slate-300">
             <span>Progress to Level {level + 1}</span>
-            <span>
+            <span className="font-semibold">
               {xp}/{nextLevelXp}
             </span>
           </div>
-          <Progress value={(xp / nextLevelXp) * 100} className="h-2" />
+          <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out progress-shimmer"
+              style={{ width: `${(xp / nextLevelXp) * 100}%` }}
+            />
+          </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium mb-2">Badges</p>
-          <div className="flex space-x-2">
-            {badges.map((badge) => {
+          <p className="text-sm font-medium mb-3 text-slate-200">Badges</p>
+          <div className="flex flex-wrap gap-2">
+            {badges.map((badge, index) => {
               const Icon = badge.icon
               return (
                 <Badge
                   key={badge.name}
                   variant={badge.earned ? "default" : "secondary"}
-                  className={`flex items-center space-x-1 ${badge.earned ? "animate-pulse" : "opacity-50"}`}
+                  className={`flex items-center space-x-1 transition-all duration-300 ${
+                    badge.earned
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-500/50 hover:scale-110"
+                      : "bg-slate-800/50 text-slate-500 border-slate-700 opacity-60"
+                  }`}
+                  style={{ animationDelay: `${index * 200}ms` }}
                 >
                   <Icon className="h-3 w-3" />
                   <span className="text-xs">{badge.name}</span>

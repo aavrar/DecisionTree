@@ -213,12 +213,12 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   }
   
   return (
-    <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
+    <div className="w-full bg-slate-900/50 backdrop-blur-xl rounded-lg border border-slate-700/50 shadow-2xl overflow-hidden">
+      <div className="p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-b border-slate-700/50">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Decision Tree Visualization</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-white">Decision Tree Visualization</h3>
+            <p className="text-sm text-slate-300">
               {tree.factors.length} factor{tree.factors.length !== 1 ? 's' : ''} •
               Node size = importance •
               Border style = uncertainty •
@@ -259,7 +259,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
       </div>
 
       <div
-        className="p-4 overflow-hidden"
+        className="p-4 overflow-hidden bg-slate-950/50"
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <svg
@@ -273,32 +273,63 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {/* Background grid (optional) */}
+          {/* Background grid and glow effects */}
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="1"/>
             </pattern>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="1"/>
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.3"/>
+            </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3" />
+          <rect width="100%" height="100%" fill="#0f172a" />
+          <rect width="100%" height="100%" fill="url(#grid)" opacity="0.2" />
 
           {/* Main group with zoom and pan transforms */}
           <g transform={`translate(${pan.x + width / 2}, ${pan.y + height / 2}) scale(${scale}) translate(${-width / 2}, ${-height / 2})`}>
-            {/* Render connections */}
+            {/* Render connections with glow */}
             {tree.connections.map(connection => (
-            <path
-              key={connection.id}
-              d={connection.path}
-              stroke="#94a3b8"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray={connection.to.factor?.uncertainty && connection.to.factor.uncertainty > 70 ? "5,5" : undefined}
-              opacity="0.7"
-            />
+            <g key={connection.id}>
+              <path
+                d={connection.path}
+                stroke="url(#nodeGlow)"
+                strokeWidth="3"
+                fill="none"
+                strokeDasharray={connection.to.factor?.uncertainty && connection.to.factor.uncertainty > 70 ? "5,5" : undefined}
+                opacity="0.3"
+                filter="url(#glow)"
+              />
+              <path
+                d={connection.path}
+                stroke="#60a5fa"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray={connection.to.factor?.uncertainty && connection.to.factor.uncertainty > 70 ? "5,5" : undefined}
+                opacity="0.6"
+              />
+            </g>
           ))}
           
-          {/* Render factor nodes */}
+          {/* Render factor nodes with glow */}
           {tree.factors.map(node => (
             <g key={node.id}>
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={node.size! + 8}
+                fill={node.color}
+                opacity="0.2"
+                filter="url(#glow)"
+                className="pointer-events-none"
+              />
               <circle
                 cx={node.x}
                 cy={node.y}
@@ -307,8 +338,9 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
                 stroke={node.color}
                 strokeWidth={node.borderWidth}
                 strokeDasharray={node.borderStyle === 'dashed' ? '5,5' : undefined}
-                opacity="0.8"
-                className="hover:opacity-100 transition-opacity cursor-pointer"
+                opacity="0.9"
+                filter="url(#glow)"
+                className="hover:opacity-100 transition-all cursor-pointer hover:r-[${node.size! + 2}]"
                 onClick={(e) => {
                   e.stopPropagation()
                   onNodeClick?.(node)
@@ -318,7 +350,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
                 x={node.x}
                 y={node.y + node.size! + 20}
                 textAnchor="middle"
-                className="text-xs font-medium fill-gray-700 pointer-events-none"
+                className="text-xs font-medium fill-slate-200 pointer-events-none"
                 style={{ fontSize: '12px' }}
               >
                 {node.label}
@@ -327,7 +359,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
                 x={node.x}
                 y={node.y + node.size! + 35}
                 textAnchor="middle"
-                className="text-xs fill-gray-500 pointer-events-none"
+                className="text-xs fill-slate-400 pointer-events-none"
                 style={{ fontSize: '10px' }}
               >
                 {(node.factor as any)?.relativePercentage || 0}%
@@ -335,17 +367,27 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
             </g>
           ))}
 
-          {/* Render root node (decision) */}
+          {/* Render root node (decision) with enhanced glow */}
           <g>
+            <circle
+              cx={tree.root.x}
+              cy={tree.root.y}
+              r={tree.root.size! + 15}
+              fill={tree.root.color}
+              opacity="0.3"
+              filter="url(#glow)"
+              className="pointer-events-none animate-pulse-glow"
+            />
             <circle
               cx={tree.root.x}
               cy={tree.root.y}
               r={tree.root.size}
               fill={tree.root.color}
-              stroke={tree.root.color}
+              stroke="#818cf8"
               strokeWidth={tree.root.borderWidth}
-              opacity="0.9"
-              className="hover:opacity-100 transition-opacity cursor-pointer"
+              opacity="0.95"
+              filter="url(#glow)"
+              className="hover:opacity-100 transition-all cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation()
                 onNodeClick?.(tree.root)
@@ -365,7 +407,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
               x={tree.root.x}
               y={tree.root.y - tree.root.size! - 15}
               textAnchor="middle"
-              className="text-sm font-medium fill-gray-800 pointer-events-none"
+              className="text-sm font-medium fill-slate-100 pointer-events-none"
               style={{ fontSize: '13px' }}
             >
               {tree.root.label}

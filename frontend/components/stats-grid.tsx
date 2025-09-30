@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, CheckCircle, Clock, Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
 import type { DecisionStats } from "@/types/decision"
 
 interface StatsGridProps {
@@ -10,30 +10,7 @@ interface StatsGridProps {
   loading?: boolean
 }
 
-function useAnimatedCounter(end: number, duration = 2000) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    let startTime: number
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime
-      const progress = Math.min((currentTime - startTime) / duration, 1)
-      setCount(Math.floor(progress * end))
-
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      }
-    }
-    requestAnimationFrame(animate)
-  }, [end, duration])
-
-  return count
-}
-
 export function StatsGrid({ stats, loading }: StatsGridProps) {
-  const animatedTotal = useAnimatedCounter(stats.totalDecisions)
-  const animatedSatisfaction = useAnimatedCounter(stats.satisfactionRate)
-  const animatedActive = useAnimatedCounter(stats.activeDecisions)
 
   if (loading) {
     return (
@@ -57,27 +34,28 @@ export function StatsGrid({ stats, loading }: StatsGridProps) {
   const statCards = [
     {
       title: "Decisions Made",
-      value: animatedTotal,
+      value: stats.totalDecisions,
       trend: stats.trends.decisionsThisMonth,
       trendLabel: "this month",
       icon: CheckCircle,
-      gradient: "gradient-success",
+      gradient: "from-emerald-500 to-teal-500",
     },
     {
       title: "Satisfaction Rate",
-      value: `${animatedSatisfaction}%`,
+      value: stats.satisfactionRate,
+      suffix: "%",
       trend: stats.trends.satisfactionChange,
       trendLabel: "vs last month",
       icon: TrendingUp,
-      gradient: "gradient-warning",
+      gradient: "from-blue-500 to-purple-500",
     },
     {
       title: "Active Decisions",
-      value: animatedActive,
+      value: stats.activeDecisions,
       trend: -2,
       trendLabel: "from last week",
       icon: Clock,
-      gradient: "gradient-danger",
+      gradient: "from-pink-500 to-rose-500",
     },
   ]
 
@@ -91,26 +69,28 @@ export function StatsGrid({ stats, loading }: StatsGridProps) {
         return (
           <Card
             key={index}
-            className="hover-lift glassmorphism group cursor-pointer transform transition-all duration-300 hover:scale-105 animate-float-up"
-            style={{ animationDelay: `${index * 200}ms` }}
+            className="relative glassmorphism-strong group transition-all duration-300 animate-float-up overflow-hidden border-slate-700/50"
+            style={{ animationDelay: `${index * 150}ms` }}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
+
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
                 {stat.title}
               </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground group-hover:scale-110 transition-transform" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`text-3xl font-bold ${stat.gradient} bg-clip-text text-transparent mb-2 group-hover:scale-105 transition-transform`}
-              >
-                {stat.value}
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.gradient} opacity-20 group-hover:opacity-40 transition-opacity`}>
+                <Icon className="h-4 w-4 text-white group-hover:scale-110 transition-transform" />
               </div>
-              <div className="flex items-center text-xs text-muted-foreground">
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className={`text-4xl font-bold bg-gradient-to-br ${stat.gradient} bg-clip-text text-transparent mb-2`}>
+                <AnimatedCounter value={stat.value} suffix={stat.suffix || ""} duration={2500} />
+              </div>
+              <div className="flex items-center text-xs text-slate-400">
                 <TrendIcon
-                  className={`h-3 w-3 mr-1 ${isPositiveTrend ? "text-green-500" : "text-red-500"} group-hover:animate-pulse`}
+                  className={`h-3 w-3 mr-1 ${isPositiveTrend ? "text-emerald-400" : "text-red-400"} group-hover:animate-bounce-subtle`}
                 />
-                <span className={isPositiveTrend ? "text-green-500" : "text-red-500"}>
+                <span className={isPositiveTrend ? "text-emerald-400" : "text-red-400"}>
                   {isPositiveTrend ? "+" : ""}
                   {stat.trend}
                 </span>

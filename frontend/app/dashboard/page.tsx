@@ -16,6 +16,8 @@ import { NotificationSystem } from "@/components/notification-system"
 import { GamificationPanel } from "@/components/gamification-panel"
 import { NodeDetailPanel } from "@/components/node-detail-panel"
 import { DecisionHistoryList } from "@/components/decision-history-list"
+import { AnimatedBackground } from "@/components/ui/animated-background"
+import { ParticleField } from "@/components/ui/particle-field"
 import type { Decision, DecisionStats, DecisionTreeNode, Factor } from "@/types/decision"
 import { useDecisions, useDecisionStats } from "@/hooks/useDecisions"
 
@@ -158,22 +160,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50/20 via-purple-50/10 to-pink-50/20 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-pink-950/20 animate-gradient-shift pointer-events-none" />
-
-      <div className="fixed inset-0 pointer-events-none" suppressHydrationWarning>
-        {typeof window !== 'undefined' && Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${15 + Math.random() * 10}s`,
-            }}
-          />
-        ))}
-      </div>
+      <AnimatedBackground variant="mesh" />
+      <ParticleField count={30} />
 
       <Header />
 

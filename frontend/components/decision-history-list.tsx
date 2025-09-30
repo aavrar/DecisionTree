@@ -42,18 +42,18 @@ export function DecisionHistoryList({
 
   if (loading) {
     return (
-      <Card className="glassmorphism">
+      <Card className="glassmorphism-strong border-slate-700/50">
         <CardHeader>
-          <CardTitle>Recent Decisions</CardTitle>
+          <CardTitle className="text-white">Recent Decisions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 border rounded-lg glassmorphism">
+              <div key={i} className="p-4 border border-slate-700/30 rounded-lg bg-slate-800/30">
                 <div className="space-y-3">
-                  <div className="h-5 w-3/4 bg-muted animate-pulse rounded"></div>
-                  <div className="h-4 w-1/2 bg-muted animate-pulse rounded"></div>
-                  <div className="h-8 w-full bg-muted animate-pulse rounded"></div>
+                  <div className="h-5 w-3/4 bg-slate-700/50 animate-pulse rounded"></div>
+                  <div className="h-4 w-1/2 bg-slate-700/50 animate-pulse rounded"></div>
+                  <div className="h-8 w-full bg-slate-700/50 animate-pulse rounded"></div>
                 </div>
               </div>
             ))}
@@ -65,15 +65,15 @@ export function DecisionHistoryList({
 
   if (decisions.length === 0) {
     return (
-      <Card className="glassmorphism">
+      <Card className="glassmorphism-strong border-slate-700/50">
         <CardHeader>
-          <CardTitle>Recent Decisions</CardTitle>
+          <CardTitle className="text-white">Recent Decisions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No decisions yet</h3>
-            <p className="text-sm text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto text-slate-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-white">No decisions yet</h3>
+            <p className="text-sm text-slate-400">
               Create your first decision to get started
             </p>
           </div>
@@ -83,14 +83,14 @@ export function DecisionHistoryList({
   }
 
   return (
-    <Card className="glassmorphism hover-lift animate-float-up">
+    <Card className="glassmorphism-strong hover-lift animate-float-up border-slate-700/50">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-white">
+            <FileText className="h-5 w-5 text-blue-400" />
             Recent Decisions
           </CardTitle>
-          <Badge variant="secondary">{decisions.length} total</Badge>
+          <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">{decisions.length} total</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -98,13 +98,13 @@ export function DecisionHistoryList({
           {decisions.map((decision, index) => (
             <div
               key={decision.id}
-              className="p-4 border rounded-lg glassmorphism hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
+              className="p-4 border border-slate-700/30 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 hover:border-slate-600/50 hover:scale-[1.02] transition-all duration-300 cursor-pointer group animate-float-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                    <h4 className="font-semibold text-sm truncate text-white group-hover:text-blue-300 transition-colors">
                       {decision.title}
                     </h4>
                     <Badge className={`${getStatusColor(decision.status)} flex items-center gap-1 text-xs`}>
@@ -114,12 +114,12 @@ export function DecisionHistoryList({
                   </div>
 
                   {decision.description && (
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                    <p className="text-xs text-slate-400 mb-2 line-clamp-2">
                       {decision.description}
                     </p>
                   )}
 
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <FileText className="h-3 w-3" />
                       {decision.factors?.length || 0} factors
@@ -133,7 +133,7 @@ export function DecisionHistoryList({
                   </div>
                 </div>
 
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {onView && (
                     <Button
                       variant="ghost"
@@ -155,7 +155,7 @@ export function DecisionHistoryList({
                         e.stopPropagation()
                         onEdit(decision)
                       }}
-                      className="h-8 w-8 p-0 hover:text-blue-600"
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -170,7 +170,7 @@ export function DecisionHistoryList({
                           onDelete(decision.id)
                         }
                       }}
-                      className="h-8 w-8 p-0 hover:text-red-600"
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
