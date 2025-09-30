@@ -1,12 +1,15 @@
 "use client"
 
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { ZoomIn, ZoomOut, Maximize2, Download } from 'lucide-react'
 import type { Decision, DecisionTree, DecisionTreeNode, TreeConnection } from '@/types/decision'
 
 interface TreeVisualizationProps {
   decision: Decision
   width?: number
   height?: number
+  onNodeClick?: (node: DecisionTreeNode) => void
 }
 
 // Utility function to get category color
@@ -97,13 +100,107 @@ const generateDecisionTree = (decision: Decision, containerWidth: number, contai
 }
 
 // Tree visualization component
-export function TreeVisualization({ decision, width = 800, height = 400 }: TreeVisualizationProps) {
+export function TreeVisualization({ decision, width = 800, height = 400, onNodeClick }: TreeVisualizationProps) {
+  const [scale, setScale] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const svgRef = useRef<SVGSVGElement>(null)
+
   // Force re-render when decision data changes by using JSON.stringify as dependency
-  const tree = React.useMemo(() => 
-    generateDecisionTree(decision, width, height), 
+  const tree = React.useMemo(() =>
+    generateDecisionTree(decision, width, height),
     [decision, width, height, JSON.stringify(decision.factors)]
   )
-  
+
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.2, 3))
+  }
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.2, 0.5))
+  }
+
+  const handleResetView = () => {
+    setScale(1)
+    setPan({ x: 0, y: 0 })
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    setScale(prev => Math.max(0.5, Math.min(3, prev + delta)))
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) {
+      setIsDragging(true)
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleExportSVG = () => {
+    if (!svgRef.current) return
+
+    const svgData = new XMLSerializer().serializeToString(svgRef.current)
+    const blob = new Blob([svgData], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${decision.title || 'decision-tree'}.svg`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportPNG = () => {
+    if (!svgRef.current) return
+
+    const svgData = new XMLSerializer().serializeToString(svgRef.current)
+    const canvas = document.createElement('canvas')
+    canvas.width = width * 2
+    canvas.height = height * 2
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    const img = new Image()
+    const blob = new Blob([svgData], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+
+    img.onload = () => {
+      ctx.fillStyle = 'white'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const pngUrl = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = pngUrl
+          link.download = `${decision.title || 'decision-tree'}.png`
+          link.click()
+          URL.revokeObjectURL(pngUrl)
+        }
+      })
+      URL.revokeObjectURL(url)
+    }
+
+    img.src = url
+  }
+
   if (!decision.title && decision.factors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
@@ -118,16 +215,64 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
   return (
     <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden">
       <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">Decision Tree Visualization</h3>
-        <p className="text-sm text-gray-600">
-          {tree.factors.length} factor{tree.factors.length !== 1 ? 's' : ''} • 
-          Node size represents importance • 
-          Border style shows uncertainty
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Decision Tree Visualization</h3>
+            <p className="text-sm text-gray-600">
+              {tree.factors.length} factor{tree.factors.length !== 1 ? 's' : ''} •
+              Node size = importance •
+              Border style = uncertainty •
+              Zoom: {Math.round(scale * 100)}%
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleZoomIn} disabled={scale >= 3}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleZoomOut} disabled={scale <= 0.5}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleResetView}>
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+            <div className="relative group">
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4" />
+              </Button>
+              <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <button
+                  onClick={handleExportPNG}
+                  className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-md"
+                >
+                  Export PNG
+                </button>
+                <button
+                  onClick={handleExportSVG}
+                  className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-md"
+                >
+                  Export SVG
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div className="p-4">
-        <svg width={width} height={height} className="w-full h-auto">
+
+      <div
+        className="p-4 overflow-hidden"
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      >
+        <svg
+          ref={svgRef}
+          width={width}
+          height={height}
+          className="w-full h-auto"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {/* Background grid (optional) */}
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -135,9 +280,11 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3" />
-          
-          {/* Render connections */}
-          {tree.connections.map(connection => (
+
+          {/* Main group with zoom and pan transforms */}
+          <g transform={`translate(${pan.x + width / 2}, ${pan.y + height / 2}) scale(${scale}) translate(${-width / 2}, ${-height / 2})`}>
+            {/* Render connections */}
+            {tree.connections.map(connection => (
             <path
               key={connection.id}
               d={connection.path}
@@ -162,12 +309,16 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
                 strokeDasharray={node.borderStyle === 'dashed' ? '5,5' : undefined}
                 opacity="0.8"
                 className="hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onNodeClick?.(node)
+                }}
               />
               <text
                 x={node.x}
                 y={node.y + node.size! + 20}
                 textAnchor="middle"
-                className="text-xs font-medium fill-gray-700"
+                className="text-xs font-medium fill-gray-700 pointer-events-none"
                 style={{ fontSize: '12px' }}
               >
                 {node.label}
@@ -176,14 +327,14 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
                 x={node.x}
                 y={node.y + node.size! + 35}
                 textAnchor="middle"
-                className="text-xs fill-gray-500"
+                className="text-xs fill-gray-500 pointer-events-none"
                 style={{ fontSize: '10px' }}
               >
                 {(node.factor as any)?.relativePercentage || 0}%
               </text>
             </g>
           ))}
-          
+
           {/* Render root node (decision) */}
           <g>
             <circle
@@ -195,13 +346,17 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
               strokeWidth={tree.root.borderWidth}
               opacity="0.9"
               className="hover:opacity-100 transition-opacity cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onNodeClick?.(tree.root)
+              }}
             />
             <text
               x={tree.root.x}
               y={tree.root.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              className="text-sm font-semibold fill-white"
+              className="text-sm font-semibold fill-white pointer-events-none"
               style={{ fontSize: '14px' }}
             >
               Decision
@@ -210,11 +365,12 @@ export function TreeVisualization({ decision, width = 800, height = 400 }: TreeV
               x={tree.root.x}
               y={tree.root.y - tree.root.size! - 15}
               textAnchor="middle"
-              className="text-sm font-medium fill-gray-800"
+              className="text-sm font-medium fill-gray-800 pointer-events-none"
               style={{ fontSize: '13px' }}
             >
               {tree.root.label}
             </text>
+          </g>
           </g>
         </svg>
       </div>

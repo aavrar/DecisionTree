@@ -1,12 +1,13 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, CheckCircle, Clock } from "lucide-react"
+import { TrendingUp, TrendingDown, CheckCircle, Clock, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { DecisionStats } from "@/types/decision"
 
 interface StatsGridProps {
   stats: DecisionStats
+  loading?: boolean
 }
 
 function useAnimatedCounter(end: number, duration = 2000) {
@@ -29,10 +30,29 @@ function useAnimatedCounter(end: number, duration = 2000) {
   return count
 }
 
-export function StatsGrid({ stats }: StatsGridProps) {
+export function StatsGrid({ stats, loading }: StatsGridProps) {
   const animatedTotal = useAnimatedCounter(stats.totalDecisions)
   const animatedSatisfaction = useAnimatedCounter(stats.satisfactionRate)
   const animatedActive = useAnimatedCounter(stats.activeDecisions)
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="glassmorphism">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2"></div>
+              <div className="h-3 w-32 bg-muted animate-pulse rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
 
   const statCards = [
     {

@@ -38,10 +38,15 @@ export const createDecision = async (req: Request, res: Response): Promise<void>
       await user.save();
     }
 
+    const decisionWithId = {
+      ...decision.toObject(),
+      id: (decision._id as any).toString()
+    };
+
     res.status(201).json({
       success: true,
       message: 'Decision created successfully',
-      data: { decision }
+      data: { decision: decisionWithId }
     });
   } catch (error) {
     console.error('Create decision error:', error);
@@ -84,10 +89,15 @@ export const getDecisions = async (req: Request, res: Response): Promise<void> =
 
     const total = await Decision.countDocuments(query);
 
+    const decisionsWithId = decisions.map(decision => ({
+      ...decision.toObject(),
+      id: (decision._id as any).toString()
+    }));
+
     res.json({
       success: true,
       data: {
-        decisions,
+        decisions: decisionsWithId,
         pagination: {
           page: pageNum,
           limit: limitNum,
@@ -127,9 +137,14 @@ export const getDecision = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    const decisionWithId = {
+      ...decision.toObject(),
+      id: (decision._id as any).toString()
+    };
+
     res.json({
       success: true,
-      data: { decision }
+      data: { decision: decisionWithId }
     });
   } catch (error) {
     console.error('Get decision error:', error);
@@ -180,10 +195,15 @@ export const updateDecision = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    const decisionWithId = {
+      ...decision.toObject(),
+      id: (decision._id as any).toString()
+    };
+
     res.json({
       success: true,
       message: 'Decision updated successfully',
-      data: { decision }
+      data: { decision: decisionWithId }
     });
   } catch (error) {
     console.error('Update decision error:', error);

@@ -62,7 +62,8 @@ function FactorSphere({
   startAngle,
   adventureState,
   allFactors,
-  onClick
+  onClick,
+  onHover
 }: {
   factor: any
   position: [number, number, number]
@@ -72,6 +73,7 @@ function FactorSphere({
   adventureState: AdventureState
   allFactors: any[]
   onClick?: () => void
+  onHover?: (id: string | null) => void
 }) {
   const meshRef = useRef<THREE.Mesh>(null!)
   const labelRef = useRef<THREE.Group>(null!)
@@ -139,8 +141,14 @@ function FactorSphere({
         args={[sphereSize, 32, 32]}
         position={position}
         onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerOver={() => {
+          setHovered(true)
+          onHover?.(factor.id)
+        }}
+        onPointerOut={() => {
+          setHovered(false)
+          onHover?.(null)
+        }}
         scale={isCurrentNode ? 1.5 : (hovered || isClickable) ? 1.2 : 1}
       >
         <meshStandardMaterial
@@ -392,12 +400,14 @@ function Scene({
   decision,
   adventureState,
   onNodeClick,
-  onAdventureModeToggle
+  onAdventureModeToggle,
+  onNodeHover
 }: {
   decision: Decision
   adventureState: AdventureState
   onNodeClick: (nodeId: AdventureNode) => void
   onAdventureModeToggle: () => void
+  onNodeHover?: (nodeId: string | null) => void
 }) {
   const factors = decision.factors || []
 
@@ -439,6 +449,7 @@ function Scene({
         adventureState={adventureState}
         allFactors={factors}
         onClick={() => onNodeClick(factor.id)}
+        onHover={onNodeHover}
       />
     )
   })
@@ -492,6 +503,7 @@ function Scene({
 export function DecisionCosmos3D({ decision, width = 800, height = 600 }: DecisionCosmos3DProps) {
   const [mounted, setMounted] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [hoveredNode, setHoveredNode] = React.useState<string | null>(null)
   const [adventureState, setAdventureState] = React.useState<AdventureState>({
     currentNode: 'start',
     visitedNodes: [],
@@ -604,8 +616,45 @@ export function DecisionCosmos3D({ decision, width = 800, height = 600 }: Decisi
 
   const nodeInfo = getCurrentNodeInfo()
 
+  const hoveredFactor = hoveredNode ? decision.factors.find(f => f.id === hoveredNode) : null
+  const totalWeight = decision.factors.reduce((sum, f) => sum + f.weight, 0)
+  const hoveredPercentage = hoveredFactor && totalWeight > 0
+    ? Math.round((hoveredFactor.weight / totalWeight) * 100)
+    : 0
+
   return (
     <div className="w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-lg border shadow-sm overflow-hidden relative">
+      {/* Hover Info Overlay */}
+      {hoveredFactor && !adventureState.isAdventureMode && (
+        <div className="absolute top-24 right-4 z-20 bg-black/90 backdrop-blur-md rounded-lg p-4 text-white min-w-[250px] animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="space-y-2">
+            <h4 className="font-semibold text-lg">{hoveredFactor.name}</h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Relative Weight:</span>
+                <span className="font-medium">{hoveredPercentage}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Category:</span>
+                <span className="font-medium capitalize">{hoveredFactor.category}</span>
+              </div>
+              {hoveredFactor.uncertainty !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Uncertainty:</span>
+                  <span className="font-medium">{hoveredFactor.uncertainty}%</span>
+                </div>
+              )}
+              {hoveredFactor.timeHorizon && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Time Horizon:</span>
+                  <span className="font-medium capitalize">{hoveredFactor.timeHorizon}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
         <div className="flex justify-between items-center">
           <div>
@@ -668,6 +717,7 @@ export function DecisionCosmos3D({ decision, width = 800, height = 600 }: Decisi
             adventureState={adventureState}
             onNodeClick={handleNodeClick}
             onAdventureModeToggle={toggleAdventureMode}
+            onNodeHover={setHoveredNode}
           />
         </Canvas>
       </div>

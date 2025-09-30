@@ -10,21 +10,26 @@ import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles, Heart, Clock, TrendingUp, AlertTriangle, Timer } from "lucide-react"
+import { Plus, Trash2, Brain, Mic, MicOff, GripVertical, Sparkles, Heart, Clock, TrendingUp, AlertTriangle, Timer, Save, Loader2 } from "lucide-react"
 import type { Decision, Factor } from "@/types/decision"
+import { useDecisions } from "@/hooks/useDecisions"
 
 interface DecisionFormProps {
   decision: Decision
   onDecisionChange: (decision: Decision) => void
   onNotification: (message: string, type?: "success" | "warning" | "error") => void
+  onSaveSuccess?: (savedDecision: Decision) => void
+  editMode?: boolean
 }
 
-export function DecisionForm({ decision, onDecisionChange, onNotification }: DecisionFormProps) {
+export function DecisionForm({ decision, onDecisionChange, onNotification, onSaveSuccess, editMode = false }: DecisionFormProps) {
   const [newFactorName, setNewFactorName] = useState("")
   const [isListening, setIsListening] = useState(false)
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const { createDecision, updateDecision: updateDecisionAPI } = useDecisions({ autoFetch: false })
 
   const startVoiceInput = () => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
@@ -135,6 +140,42 @@ export function DecisionForm({ decision, onDecisionChange, onNotification }: Dec
     const updatedFactors = decision.factors.filter((factor) => factor.id !== factorId)
     updateDecision({ factors: updatedFactors })
     onNotification("Factor removed", "warning")
+  }
+
+  const handleSaveDecision = async () => {
+    if (!decision.title) {
+      onNotification("Please enter a decision title", "error")
+      return
+    }
+
+    if (decision.factors.length === 0) {
+      onNotification("Please add at least one factor", "error")
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      let savedDecision: Decision | null = null
+
+      if (editMode && decision.id) {
+        savedDecision = await updateDecisionAPI(decision.id, decision)
+        onNotification("Decision updated successfully!", "success")
+      } else {
+        const { id, createdAt, updatedAt, ...decisionData } = decision
+        savedDecision = await createDecision(decisionData)
+        onNotification("Decision saved successfully!", "success")
+      }
+
+      if (savedDecision && onSaveSuccess) {
+        onSaveSuccess(savedDecision)
+      }
+    } catch (error) {
+      onNotification("Failed to save decision. Please try again.", "error")
+      console.error("Save decision error:", error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getCategoryColor = (category: Factor["category"]) => {
@@ -535,14 +576,24 @@ export function DecisionForm({ decision, onDecisionChange, onNotification }: Dec
           </div>
         </div>
 
-        {/* Generate Button */}
+        {/* Save Decision Button */}
         <Button
           className="w-full gradient-success text-white border-0 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
           size="lg"
-          onClick={() => onNotification("Decision tree generation started!", "success")}
+          onClick={handleSaveDecision}
+          disabled={isSaving || !decision.title || decision.factors.length === 0}
         >
-          <Brain className="h-4 w-4 mr-2 animate-spin" />
-          Generate Decision Tree
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {editMode ? "Updating..." : "Saving..."}
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              {editMode ? "Update Decision" : "Save Decision"}
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
