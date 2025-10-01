@@ -10,6 +10,7 @@ interface TreeVisualizationProps {
   width?: number
   height?: number
   onNodeClick?: (node: DecisionTreeNode) => void
+  onContinueToBuilder?: () => void
 }
 
 // Utility function to get category color
@@ -23,15 +24,121 @@ const getCategoryColor = (category: string): string => {
   }
 }
 
-// Utility function to transform Decision into DecisionTree structure
+// Utility function to get node type color
+const getNodeTypeColor = (type: string): string => {
+  switch (type) {
+    case "outcome": return "#3b82f6"    // blue
+    case "consequence": return "#8b5cf6" // purple
+    case "option": return "#10b981"      // green
+    case "consideration": return "#f59e0b" // amber
+    default: return "#6b7280"            // gray
+  }
+}
+
+// Calculate subtree width recursively (family tree style)
+const calculateSubtreeWidth = (node: any, minSpacing: number = 100): number => {
+  if (!node.children || node.children.length === 0) {
+    return minSpacing
+  }
+
+  const childrenWidth = node.children.reduce((sum: number, child: any) => {
+    return sum + calculateSubtreeWidth(child, minSpacing)
+  }, 0)
+
+  return Math.max(minSpacing, childrenWidth)
+}
+
+// Position nodes in family tree layout
+const positionSubtree = (
+  node: any,
+  x: number,
+  y: number,
+  minSpacing: number,
+  allNodes: DecisionTreeNode[],
+  connections: TreeConnection[],
+  parentNode: DecisionTreeNode | null,
+  getCategoryColorFn: (cat: string) => string,
+  getNodeTypeColorFn: (type: string) => string,
+  parentWeight: number,
+  levelHeight: number
+) => {
+  const isFactor = 'weight' in node && 'category' in node
+  const size = isFactor ? 30 : 25
+  const color = isFactor ? getCategoryColorFn(node.category) : getNodeTypeColorFn(node.type)
+
+  // Calculate percentage for child nodes
+  const siblingCount = parentNode?.factor?.children?.length || 1
+  const childPercentage = Math.round(parentWeight / siblingCount)
+
+  const currentNode: DecisionTreeNode = {
+    id: node.id,
+    label: node.name,
+    type: 'factor',
+    x,
+    y,
+    factor: isFactor ? node : { ...node, relativePercentage: childPercentage },
+    size,
+    color,
+    borderStyle: isFactor && (node.uncertainty || 0) > 70 ? 'dashed' : 'solid',
+    borderWidth: isFactor ? Math.max(1, ((node.emotionalWeight || 50) / 100) * 4) : 2
+  }
+
+  allNodes.push(currentNode)
+
+  // Create connection to parent
+  if (parentNode) {
+    connections.push({
+      id: `${parentNode.id}-${currentNode.id}`,
+      from: parentNode,
+      to: currentNode,
+      path: `M ${parentNode.x} ${parentNode.y + parentNode.size!/2} Q ${(parentNode.x + currentNode.x)/2} ${(parentNode.y + currentNode.y)/2} ${currentNode.x} ${currentNode.y - currentNode.size!/2}`
+    })
+  }
+
+  // Layout children
+  if (node.children && node.children.length > 0) {
+    let offset = x
+    const childY = y + levelHeight
+
+    // Center children under parent
+    const totalWidth = calculateSubtreeWidth(node, minSpacing)
+    offset = x - totalWidth / 2
+
+    node.children.forEach((child: any) => {
+      const childWidth = calculateSubtreeWidth(child, minSpacing)
+      const childX = offset + childWidth / 2
+
+      positionSubtree(
+        child,
+        childX,
+        childY,
+        minSpacing,
+        allNodes,
+        connections,
+        currentNode,
+        getCategoryColorFn,
+        getNodeTypeColorFn,
+        isFactor ? (node.relativePercentage || childPercentage) : childPercentage,
+        levelHeight
+      )
+
+      offset += childWidth
+    })
+  }
+
+  return currentNode
+}
+
+// Utility function to transform Decision into DecisionTree structure with family tree layout
 const generateDecisionTree = (decision: Decision, containerWidth: number, containerHeight: number): DecisionTree => {
   const factors = decision.factors || []
-  
+
   // Calculate layout dimensions
-  const rootY = 120  // Increased from 80 to give more space for title
-  const factorY = containerHeight - 120
+  const rootY = 80
+  const levelHeight = 120
   const centerX = containerWidth / 2
-  
+  const minSpacing = 100
+
   // Create root node (decision)
   const root: DecisionTreeNode = {
     id: 'root',
@@ -40,71 +147,107 @@ const generateDecisionTree = (decision: Decision, containerWidth: number, contai
     x: centerX,
     y: rootY,
     size: 60,
-    color: '#4f46e5', // indigo for decision node
+    color: '#4f46e5',
     borderStyle: 'solid',
     borderWidth: 3
   }
-  
+
+  const allNodes: DecisionTreeNode[] = []
+  const connections: TreeConnection[] = []
+
   // Calculate total weight for relative percentages
   const totalWeight = factors.reduce((sum, f) => sum + f.weight, 0)
-  
-  // Create factor nodes
-  const factorNodes: DecisionTreeNode[] = factors.map((factor, index) => {
-    const totalFactors = factors.length
-    const spacing = Math.min(120, (containerWidth - 200) / Math.max(totalFactors - 1, 1))
-    const startX = centerX - ((totalFactors - 1) * spacing) / 2
-    const x = totalFactors === 1 ? centerX : startX + (index * spacing)
-    
-    // Calculate relative percentage of this factor vs total
+
+  // Calculate total width needed for all factor subtrees
+  const totalTreeWidth = factors.reduce((sum, factor) => {
+    return sum + calculateSubtreeWidth(factor, minSpacing)
+  }, 0)
+
+  let currentX = centerX - totalTreeWidth / 2
+
+  // Layout each factor and its subtree
+  factors.forEach((factor) => {
+    const factorWidth = calculateSubtreeWidth(factor, minSpacing)
+    const factorX = currentX + factorWidth / 2
+    const factorY = rootY + levelHeight
+
     const relativePercentage = totalWeight > 0 ? Math.round((factor.weight / totalWeight) * 100) : 0
-    
-    // Calculate visual properties based on factor data
     const baseSize = 30
-    const sizeMultiplier = (factor.weight / 100) * 0.8 + 0.4 // 0.4 to 1.2
+    const sizeMultiplier = (factor.weight / 100) * 0.8 + 0.4
     const size = baseSize * sizeMultiplier
-    
-    const uncertainty = factor.uncertainty || 50
-    const borderStyle = uncertainty > 70 ? 'dashed' : 'solid'
-    
-    const emotionalWeight = factor.emotionalWeight || 50
-    const borderWidth = Math.max(1, (emotionalWeight / 100) * 4) // 1-4px based on emotional weight
-    
-    return {
+
+    const factorNode: DecisionTreeNode = {
       id: factor.id,
       label: factor.name,
-      type: 'factor' as const,
-      x,
+      type: 'factor',
+      x: factorX,
       y: factorY,
-      factor: { ...factor, relativePercentage }, // Add relative percentage to factor data
+      factor: { ...factor, relativePercentage },
       size,
       color: getCategoryColor(factor.category),
-      borderStyle,
-      borderWidth
+      borderStyle: (factor.uncertainty || 0) > 70 ? 'dashed' : 'solid',
+      borderWidth: Math.max(1, ((factor.emotionalWeight || 50) / 100) * 4)
     }
+
+    allNodes.push(factorNode)
+
+    // Connection from root to factor
+    connections.push({
+      id: `${root.id}-${factorNode.id}`,
+      from: root,
+      to: factorNode,
+      path: `M ${root.x} ${root.y + root.size!/2} Q ${(root.x + factorNode.x)/2} ${(root.y + factorNode.y)/2} ${factorNode.x} ${factorNode.y - factorNode.size!/2}`
+    })
+
+    // Layout children of this factor using family tree algorithm
+    if (factor.children && factor.children.length > 0) {
+      // Calculate total width for all children
+      const childrenTotalWidth = factor.children.reduce((sum: number, child: any) => {
+        return sum + calculateSubtreeWidth(child, minSpacing)
+      }, 0)
+
+      let childX = factorX - childrenTotalWidth / 2
+
+      factor.children.forEach((child: any) => {
+        const childWidth = calculateSubtreeWidth(child, minSpacing)
+        const childCenterX = childX + childWidth / 2
+
+        positionSubtree(
+          child,
+          childCenterX,
+          factorY + levelHeight,
+          minSpacing,
+          allNodes,
+          connections,
+          factorNode,
+          getCategoryColor,
+          getNodeTypeColor,
+          relativePercentage,
+          levelHeight
+        )
+
+        childX += childWidth
+      })
+    }
+
+    currentX += factorWidth
   })
-  
-  // Create connections from root to each factor
-  const connections: TreeConnection[] = factorNodes.map(factorNode => ({
-    id: `${root.id}-${factorNode.id}`,
-    from: root,
-    to: factorNode,
-    path: `M ${root.x} ${root.y + root.size!/2} Q ${(root.x + factorNode.x)/2} ${(root.y + factorNode.y)/2} ${factorNode.x} ${factorNode.y - factorNode.size!/2}`
-  }))
-  
+
   return {
     root,
-    factors: factorNodes,
+    factors: allNodes,
     connections,
     bounds: { width: containerWidth, height: containerHeight }
   }
 }
 
 // Tree visualization component
-export function TreeVisualization({ decision, width = 800, height = 400, onNodeClick }: TreeVisualizationProps) {
+export function TreeVisualization({ decision, width = 800, height = 400, onNodeClick, onContinueToBuilder }: TreeVisualizationProps) {
   const [scale, setScale] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isHovering, setIsHovering] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
 
   // Force re-render when decision data changes by using JSON.stringify as dependency
@@ -213,7 +356,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   }
   
   return (
-    <div className="w-full bg-slate-900/50 backdrop-blur-xl rounded-lg border border-slate-700/50 shadow-2xl overflow-hidden">
+    <div className="w-full bg-slate-900/50 backdrop-blur-xl rounded-lg border border-slate-700/50 shadow-2xl overflow-hidden relative">
       <div className="p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-b border-slate-700/50">
         <div className="flex items-center justify-between">
           <div>
@@ -259,9 +402,25 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
       </div>
 
       <div
-        className="p-4 overflow-hidden bg-slate-950/50"
+        className="p-4 overflow-hidden bg-slate-950/50 relative"
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       >
+        {/* Hover Overlay */}
+        {isHovering && onContinueToBuilder && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm transition-all duration-300">
+            <div className="text-center space-y-4 animate-float-up">
+              <p className="text-lg text-slate-200 font-medium">
+                Click <span className="text-blue-400 font-semibold">"Continue"</span> below to edit this tree
+              </p>
+              <p className="text-sm text-slate-400">
+                Add child nodes, outcomes, and consequences to build a full decision tree
+              </p>
+            </div>
+          </div>
+        )}
+
         <svg
           ref={svgRef}
           width={width}
@@ -416,6 +575,18 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
           </g>
         </svg>
       </div>
+
+      {/* Continue Button */}
+      {onContinueToBuilder && decision.factors.length > 0 && (
+        <div className="p-4 bg-slate-900/50 border-t border-slate-700/50 flex justify-center">
+          <Button
+            onClick={onContinueToBuilder}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+          >
+            Continue to Tree Builder →
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

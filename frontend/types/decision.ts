@@ -31,6 +31,18 @@ export interface Factor {
   timeHorizon?: "immediate" | "short" | "medium" | "long"
   emotionalWeight?: number // 0-100
   regretPotential?: number // 0-100
+  // Tree structure - factors can have child nodes
+  children?: TreeNodeData[]
+}
+
+// Recursive tree node structure
+export interface TreeNodeData {
+  id: string
+  name: string
+  type: "outcome" | "consequence" | "option" | "consideration"
+  weight?: number
+  description?: string
+  children?: TreeNodeData[]
 }
 
 export interface DecisionStats {

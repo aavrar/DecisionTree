@@ -18,6 +18,7 @@ import { NodeDetailPanel } from "@/components/node-detail-panel"
 import { DecisionHistoryList } from "@/components/decision-history-list"
 import { AnimatedBackground } from "@/components/ui/animated-background"
 import { ParticleField } from "@/components/ui/particle-field"
+import { TreeBuilderModal } from "@/components/tree-builder-modal"
 import type { Decision, DecisionStats, DecisionTreeNode, Factor } from "@/types/decision"
 import { useDecisions, useDecisionStats } from "@/hooks/useDecisions"
 
@@ -45,6 +46,7 @@ export default function Dashboard() {
   const [editMode, setEditMode] = useState(false)
   const [selectedNode, setSelectedNode] = useState<DecisionTreeNode | null>(null)
   const [detailPanelOpen, setDetailPanelOpen] = useState(false)
+  const [treeBuilderOpen, setTreeBuilderOpen] = useState(false)
 
   const { stats, loading: statsLoading, refetch: refetchStats } = useDecisionStats()
   const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision } = useDecisions({ limit: 10 })
@@ -141,6 +143,20 @@ export default function Dashboard() {
     }
   }
 
+  const handleOpenTreeBuilder = () => {
+    if (currentDecision.factors.length === 0) {
+      addNotification("Please add at least one factor first", "warning")
+      return
+    }
+    setTreeBuilderOpen(true)
+  }
+
+  const handleSaveTreeChanges = (updatedDecision: Decision) => {
+    setCurrentDecision(updatedDecision)
+    addNotification("Tree changes saved!", "success")
+    setTreeBuilderOpen(false)
+  }
+
   // Show loading while checking authentication
   if (status === "loading") {
     return (
@@ -212,7 +228,11 @@ export default function Dashboard() {
             </div>
 
             {/* Visualization Component - Always 2D Tree */}
-            <TreeVisualization decision={currentDecision} onNodeClick={handleNodeClick} />
+            <TreeVisualization
+              decision={currentDecision}
+              onNodeClick={handleNodeClick}
+              onContinueToBuilder={handleOpenTreeBuilder}
+            />
           </div>
         </div>
 
@@ -260,6 +280,14 @@ export default function Dashboard() {
         decision={currentDecision}
         isOpen={show3DPopup}
         onClose={() => setShow3DPopup(false)}
+      />
+
+      {/* Tree Builder Modal */}
+      <TreeBuilderModal
+        isOpen={treeBuilderOpen}
+        onClose={() => setTreeBuilderOpen(false)}
+        decision={currentDecision}
+        onSave={handleSaveTreeChanges}
       />
     </div>
   )
