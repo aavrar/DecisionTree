@@ -140,7 +140,7 @@ export interface IPsychologicalProfile extends Document {
 }
 
 // Enhanced Future Self Reflection with temporal perspectives
-export interface IFutureSelfReflection extends Document {
+export interface IEnhancedFutureSelfReflection extends Document {
   decisionId: string;
   userId: string;
   temporalPerspective: {
