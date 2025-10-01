@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Plus, Trash2, Edit2, Save, ChevronDown, ChevronRight, GripVertical, Copy, Eraser } from "lucide-react"
+import { X, Plus, Trash2, Edit2, Save, ChevronDown, ChevronRight, GripVertical, Copy, Eraser, Keyboard, Undo, Redo } from "lucide-react"
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { useKeyboardShortcuts, type KeyboardShortcut } from '@/hooks/useKeyboardShortcuts'
+import { useUndoRedo } from '@/hooks/useUndoRedo'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,17 +20,64 @@ interface TreeBuilderModalProps {
 }
 
 export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuilderModalProps) {
-  const [editingDecision, setEditingDecision] = useState<Decision>(decision)
+  const { state: editingDecision, setState: setEditingDecision, undo, redo, canUndo, canRedo, clear } = useUndoRedo<Decision>(decision, 50)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d")
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [showShortcuts, setShowShortcuts] = useState(false)
 
-  // Update editing decision when decision prop changes
-  useEffect(() => {
-    if (isOpen) {
-      setEditingDecision(decision)
+  const handleSave = () => {
+    onSave(editingDecision)
+    onClose()
+  }
+
+  // Keyboard shortcuts
+  const shortcuts: KeyboardShortcut[] = [
+    {
+      key: 's',
+      ctrl: true,
+      handler: handleSave,
+      description: 'Save changes'
+    },
+    {
+      key: 'Escape',
+      handler: onClose,
+      description: 'Close modal'
+    },
+    {
+      key: '2',
+      ctrl: true,
+      handler: () => setViewMode('2d'),
+      description: 'Switch to 2D view'
+    },
+    {
+      key: '3',
+      ctrl: true,
+      handler: () => setViewMode('3d'),
+      description: 'Switch to 3D view'
+    },
+    {
+      key: 'z',
+      ctrl: true,
+      handler: undo,
+      description: 'Undo'
+    },
+    {
+      key: 'z',
+      ctrl: true,
+      shift: true,
+      handler: redo,
+      description: 'Redo'
+    },
+    {
+      key: '?',
+      shift: true,
+      handler: () => setShowShortcuts(!showShortcuts),
+      description: 'Toggle shortcuts help'
     }
-  }, [decision, isOpen])
+  ]
+
+  useKeyboardShortcuts(shortcuts, isOpen)
 
   if (!isOpen) return null
 
@@ -43,6 +92,8 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
   }
 
   const handleAddChildNode = (parentId: string, parentPath: number[] = []) => {
+    if (!editingDecision?.factors) return
+
     const newNode: TreeNodeData = {
       id: Date.now().toString(),
       name: "New Node",
@@ -51,83 +102,100 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
       children: []
     }
 
-    const updatedFactors = [...editingDecision.factors]
+    setEditingDecision(prev => {
+      if (!prev?.factors) return prev
 
-    if (parentPath.length === 0) {
-      // Adding to a factor (top level)
-      const factorIndex = updatedFactors.findIndex(f => f.id === parentId)
-      if (factorIndex !== -1) {
-        updatedFactors[factorIndex] = {
-          ...updatedFactors[factorIndex],
-          children: [...(updatedFactors[factorIndex].children || []), newNode]
+      const updatedFactors = JSON.parse(JSON.stringify(prev.factors)) // Deep clone
+
+      if (parentPath.length === 0) {
+        // Adding to a factor (top level)
+        const factorIndex = updatedFactors.findIndex((f: Factor) => f.id === parentId)
+        if (factorIndex !== -1) {
+          updatedFactors[factorIndex] = {
+            ...updatedFactors[factorIndex],
+            children: [...(updatedFactors[factorIndex].children || []), newNode]
+          }
+        }
+      } else {
+        // Adding to a nested node
+        const factorIndex = parentPath[0]
+        let currentNode: any = updatedFactors[factorIndex]
+
+        for (let i = 1; i < parentPath.length; i++) {
+          currentNode = currentNode.children[parentPath[i]]
+        }
+
+        if (currentNode.id === parentId) {
+          currentNode.children = [...(currentNode.children || []), newNode]
         }
       }
-    } else {
-      // Adding to a nested node
-      const factorIndex = parentPath[0]
-      let currentNode: any = updatedFactors[factorIndex]
 
-      for (let i = 1; i < parentPath.length; i++) {
-        currentNode = currentNode.children[parentPath[i]]
-      }
+      return { ...prev, factors: updatedFactors }
+    })
 
-      if (currentNode.id === parentId) {
-        currentNode.children = [...(currentNode.children || []), newNode]
-      }
-    }
-
-    setEditingDecision({ ...editingDecision, factors: updatedFactors })
     setExpandedNodes(new Set([...expandedNodes, parentId]))
   }
 
   const handleUpdateNode = (nodeId: string, updates: Partial<TreeNodeData>, path: number[]) => {
-    const updatedFactors = [...editingDecision.factors]
+    if (!editingDecision?.factors) return
 
-    if (path.length === 1) {
-      // Updating a direct child of factor
-      const factorIndex = path[0]
-      const factor = updatedFactors[factorIndex]
-      if (factor.children) {
-        const childIndex = factor.children.findIndex(c => c.id === nodeId)
+    setEditingDecision(prev => {
+      if (!prev?.factors) return prev
+
+      const updatedFactors = JSON.parse(JSON.stringify(prev.factors)) // Deep clone
+
+      if (path.length === 1) {
+        // Updating a direct child of factor
+        const factorIndex = path[0]
+        const factor = updatedFactors[factorIndex]
+        if (factor.children) {
+          const childIndex = factor.children.findIndex((c: TreeNodeData) => c.id === nodeId)
+          if (childIndex !== -1) {
+            factor.children[childIndex] = { ...factor.children[childIndex], ...updates }
+          }
+        }
+      } else {
+        // Navigate to nested node
+        let currentNode: any = updatedFactors[path[0]]
+        for (let i = 1; i < path.length - 1; i++) {
+          currentNode = currentNode.children[path[i]]
+        }
+        const childIndex = currentNode.children?.findIndex((c: TreeNodeData) => c.id === nodeId)
         if (childIndex !== -1) {
-          factor.children[childIndex] = { ...factor.children[childIndex], ...updates }
+          currentNode.children[childIndex] = { ...currentNode.children[childIndex], ...updates }
         }
       }
-    } else {
-      // Navigate to nested node
-      let currentNode: any = updatedFactors[path[0]]
-      for (let i = 1; i < path.length - 1; i++) {
-        currentNode = currentNode.children[path[i]]
-      }
-      const childIndex = currentNode.children?.findIndex((c: TreeNodeData) => c.id === nodeId)
-      if (childIndex !== -1) {
-        currentNode.children[childIndex] = { ...currentNode.children[childIndex], ...updates }
-      }
-    }
 
-    setEditingDecision({ ...editingDecision, factors: updatedFactors })
+      return { ...prev, factors: updatedFactors }
+    })
   }
 
   const handleDeleteNode = (nodeId: string, parentPath: number[]) => {
-    const updatedFactors = [...editingDecision.factors]
+    if (!editingDecision?.factors) return
 
-    if (parentPath.length === 1) {
-      const factorIndex = parentPath[0]
-      const factor = updatedFactors[factorIndex]
-      if (factor.children) {
-        factor.children = factor.children.filter(c => c.id !== nodeId)
-      }
-    } else {
-      let currentNode: any = updatedFactors[parentPath[0]]
-      for (let i = 1; i < parentPath.length - 1; i++) {
-        currentNode = currentNode.children[parentPath[i]]
-      }
-      if (currentNode.children) {
-        currentNode.children = currentNode.children.filter((c: TreeNodeData) => c.id !== nodeId)
-      }
-    }
+    setEditingDecision(prev => {
+      if (!prev?.factors) return prev
 
-    setEditingDecision({ ...editingDecision, factors: updatedFactors })
+      const updatedFactors = JSON.parse(JSON.stringify(prev.factors)) // Deep clone
+
+      if (parentPath.length === 1) {
+        const factorIndex = parentPath[0]
+        const factor = updatedFactors[factorIndex]
+        if (factor.children) {
+          factor.children = factor.children.filter((c: TreeNodeData) => c.id !== nodeId)
+        }
+      } else {
+        let currentNode: any = updatedFactors[parentPath[0]]
+        for (let i = 1; i < parentPath.length - 1; i++) {
+          currentNode = currentNode.children[parentPath[i]]
+        }
+        if (currentNode.children) {
+          currentNode.children = currentNode.children.filter((c: TreeNodeData) => c.id !== nodeId)
+        }
+      }
+
+      return { ...prev, factors: updatedFactors }
+    })
   }
 
   const handleDeleteAllChildren = (nodeId: string, path: number[]) => {
@@ -135,6 +203,8 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
   }
 
   const handleDuplicateSubtree = (node: TreeNodeData, parentPath: number[]) => {
+    if (!editingDecision?.factors) return
+
     // Deep clone the node with new IDs
     const cloneNode = (original: TreeNodeData): TreeNodeData => {
       return {
@@ -145,72 +215,76 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
     }
 
     const clonedNode = cloneNode(node)
-    const updatedFactors = [...editingDecision.factors]
 
-    if (parentPath.length === 1) {
-      const factorIndex = parentPath[0]
-      const factor = updatedFactors[factorIndex]
-      if (factor.children) {
-        factor.children = [...factor.children, clonedNode]
-      }
-    } else {
-      let currentNode: any = updatedFactors[parentPath[0]]
-      for (let i = 1; i < parentPath.length - 1; i++) {
-        currentNode = currentNode.children[parentPath[i]]
-      }
-      if (currentNode.children) {
-        currentNode.children = [...currentNode.children, clonedNode]
-      }
-    }
+    setEditingDecision(prev => {
+      if (!prev?.factors) return prev
 
-    setEditingDecision({ ...editingDecision, factors: updatedFactors })
-  }
+      const updatedFactors = JSON.parse(JSON.stringify(prev.factors)) // Deep clone
 
-  const handleSave = () => {
-    onSave(editingDecision)
-    onClose()
+      if (parentPath.length === 1) {
+        const factorIndex = parentPath[0]
+        const factor = updatedFactors[factorIndex]
+        if (factor.children) {
+          factor.children = [...factor.children, clonedNode]
+        }
+      } else {
+        let currentNode: any = updatedFactors[parentPath[0]]
+        for (let i = 1; i < parentPath.length - 1; i++) {
+          currentNode = currentNode.children[parentPath[i]]
+        }
+        if (currentNode.children) {
+          currentNode.children = [...currentNode.children, clonedNode]
+        }
+      }
+
+      return { ...prev, factors: updatedFactors }
+    })
   }
 
   const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return
+    if (!result.destination || !editingDecision?.factors) return
 
     const { source, destination, draggableId } = result
 
-    // Parse source and destination paths from droppableId
-    // Format: "factor-{factorIndex}" or "node-{factorIndex}-{childIndex1}-{childIndex2}..."
-    const parsePath = (id: string): number[] => {
-      const parts = id.split('-')
-      return parts.slice(1).map(Number)
-    }
+    setEditingDecision(prev => {
+      if (!prev?.factors) return prev
 
-    const sourcePath = parsePath(source.droppableId)
-    const destPath = parsePath(destination.droppableId)
-
-    const updatedFactors = [...editingDecision.factors]
-
-    // Helper function to get node array at path
-    const getNodeArray = (path: number[]): any[] => {
-      if (path.length === 1) {
-        return updatedFactors
+      // Parse source and destination paths from droppableId
+      // Format: "factor-{factorIndex}" or "node-{factorIndex}-{childIndex1}-{childIndex2}..."
+      const parsePath = (id: string): number[] => {
+        const parts = id.split('-')
+        return parts.slice(1).map(Number)
       }
-      let current: any = updatedFactors[path[0]]
-      for (let i = 1; i < path.length - 1; i++) {
-        current = current.children[path[i]]
+
+      const sourcePath = parsePath(source.droppableId)
+      const destPath = parsePath(destination.droppableId)
+
+      const updatedFactors = JSON.parse(JSON.stringify(prev.factors)) // Deep clone
+
+      // Helper function to get node array at path
+      const getNodeArray = (path: number[]): any[] => {
+        if (path.length === 1) {
+          return updatedFactors
+        }
+        let current: any = updatedFactors[path[0]]
+        for (let i = 1; i < path.length - 1; i++) {
+          current = current.children[path[i]]
+        }
+        return current.children
       }
-      return current.children
-    }
 
-    // Get source and destination arrays
-    const sourceArray = getNodeArray(sourcePath)
-    const destArray = getNodeArray(destPath)
+      // Get source and destination arrays
+      const sourceArray = getNodeArray(sourcePath)
+      const destArray = getNodeArray(destPath)
 
-    // Remove from source
-    const [removed] = sourceArray.splice(source.index, 1)
+      // Remove from source
+      const [removed] = sourceArray.splice(source.index, 1)
 
-    // Insert at destination
-    destArray.splice(destination.index, 0, removed)
+      // Insert at destination
+      destArray.splice(destination.index, 0, removed)
 
-    setEditingDecision({ ...editingDecision, factors: updatedFactors })
+      return { ...prev, factors: updatedFactors }
+    })
   }
 
   // Recursive component for rendering tree nodes with drag-and-drop
@@ -384,10 +458,45 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
           <div>
-            <h2 className="text-2xl font-bold text-white">{decision.title}</h2>
+            <h2 className="text-2xl font-bold text-white">{decision?.title || 'Untitled Decision'}</h2>
             <p className="text-sm text-slate-400">Interactive Tree Builder</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1 border-r border-slate-700 pr-3">
+              <Button
+                onClick={undo}
+                disabled={!canUndo}
+                variant="ghost"
+                size="sm"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Undo (Ctrl + Z)"
+              >
+                <Undo className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={redo}
+                disabled={!canRedo}
+                variant="ghost"
+                size="sm"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Redo (Ctrl + Shift + Z)"
+              >
+                <Redo className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Keyboard Shortcuts Button */}
+            <Button
+              onClick={() => setShowShortcuts(!showShortcuts)}
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              title="Keyboard shortcuts (Shift + ?)"
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
+
             {/* View Toggle */}
             <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
               <button
@@ -428,6 +537,26 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
           </div>
         </div>
 
+        {/* Keyboard Shortcuts Help Panel */}
+        {showShortcuts && (
+          <div className="px-6 py-4 bg-slate-800/50 border-b border-slate-700">
+            <h3 className="text-sm font-semibold text-white mb-3">Keyboard Shortcuts</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {shortcuts.map((shortcut, index) => (
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">{shortcut.description}</span>
+                  <kbd className="px-2 py-1 bg-slate-700 rounded text-slate-200 font-mono">
+                    {shortcut.ctrl && 'Ctrl + '}
+                    {shortcut.shift && 'Shift + '}
+                    {shortcut.alt && 'Alt + '}
+                    {shortcut.key === 'Escape' ? 'Esc' : shortcut.key.toUpperCase()}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex">
           {/* Left Side: Tree Editor */}
@@ -442,7 +571,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                 </div>
 
                 {/* Debug Info */}
-                {(!editingDecision.factors || editingDecision.factors.length === 0) && (
+                {(!editingDecision?.factors || editingDecision.factors.length === 0) && (
                   <div className="text-center py-12 text-slate-400">
                     <p className="text-lg mb-2">No factors found</p>
                     <p className="text-sm">Please add factors to your decision first</p>
@@ -452,7 +581,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                 {/* Factor List with Nested Children */}
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <div className="space-y-4">
-                    {editingDecision.factors?.map((factor, factorIndex) => (
+                    {editingDecision?.factors?.map((factor, factorIndex) => (
                       <div
                         key={factor.id}
                         className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-all"
@@ -520,7 +649,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
 
                 {/* Collapsed factor list for quick access */}
                 <div className="space-y-2">
-                  {editingDecision.factors?.map((factor) => (
+                  {editingDecision?.factors?.map((factor) => (
                     <div key={factor.id} className="p-3 bg-slate-800/50 rounded border border-slate-700 hover:border-slate-600 transition-all">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

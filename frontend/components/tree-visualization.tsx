@@ -131,6 +131,24 @@ const positionSubtree = (
 
 // Utility function to transform Decision into DecisionTree structure with family tree layout
 const generateDecisionTree = (decision: Decision, containerWidth: number, containerHeight: number): DecisionTree => {
+  if (!decision) {
+    return {
+      root: {
+        id: 'root',
+        label: 'No Decision',
+        type: 'decision',
+        x: containerWidth / 2,
+        y: 80,
+        size: 60,
+        color: '#4f46e5',
+        borderStyle: 'solid',
+        borderWidth: 3
+      },
+      nodes: [],
+      connections: []
+    }
+  }
+
   const factors = decision.factors || []
 
   // Calculate layout dimensions
@@ -253,7 +271,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   // Force re-render when decision data changes by using JSON.stringify as dependency
   const tree = React.useMemo(() =>
     generateDecisionTree(decision, width, height),
-    [decision, width, height, JSON.stringify(decision.factors)]
+    [decision, width, height, JSON.stringify(decision?.factors)]
   )
 
   const handleZoomIn = () => {
@@ -296,7 +314,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   }
 
   const handleExportSVG = () => {
-    if (!svgRef.current) return
+    if (!svgRef.current || !decision) return
 
     const svgData = new XMLSerializer().serializeToString(svgRef.current)
     const blob = new Blob([svgData], { type: 'image/svg+xml' })
@@ -309,7 +327,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   }
 
   const handleExportPNG = () => {
-    if (!svgRef.current) return
+    if (!svgRef.current || !decision) return
 
     const svgData = new XMLSerializer().serializeToString(svgRef.current)
     const canvas = document.createElement('canvas')
@@ -345,13 +363,15 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
   }
 
   const handleExportJSON = () => {
+    if (!decision) return
+
     // Count total nodes recursively
     const countNodes = (children?: any[]): number => {
       if (!children || children.length === 0) return 0
       return children.reduce((sum, child) => sum + 1 + countNodes(child.children), 0)
     }
 
-    const totalNodes = decision.factors.reduce((sum, factor) =>
+    const totalNodes = (decision.factors || []).reduce((sum, factor) =>
       sum + 1 + countNodes(factor.children), 0
     )
 
@@ -365,7 +385,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
       },
       metadata: {
         exportDate: new Date().toISOString(),
-        totalFactors: decision.factors.length,
+        totalFactors: decision.factors?.length || 0,
         totalNodes: totalNodes,
         version: '1.0'
       }
@@ -381,7 +401,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
     URL.revokeObjectURL(url)
   }
 
-  if (!decision.title && decision.factors.length === 0) {
+  if (!decision || (!decision.title && (!decision.factors || decision.factors.length === 0))) {
     return (
       <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
         <div className="text-center text-gray-500">
@@ -620,7 +640,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
       </div>
 
       {/* Continue Button */}
-      {onContinueToBuilder && decision.factors.length > 0 && (
+      {onContinueToBuilder && decision?.factors && decision.factors.length > 0 && (
         <div className="p-4 bg-slate-900/50 border-t border-slate-700/50 flex justify-center">
           <Button
             onClick={onContinueToBuilder}

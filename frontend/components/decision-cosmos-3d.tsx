@@ -739,7 +739,7 @@ export function DecisionCosmos3D({ decision, width = 800, height = 600 }: Decisi
     }))
   }
 
-  if (!decision.title && decision.factors.length === 0) {
+  if (!decision || (!decision.title && (!decision.factors || decision.factors.length === 0))) {
     return (
       <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
         <div className="text-center text-gray-500">

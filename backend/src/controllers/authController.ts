@@ -162,12 +162,8 @@ export const googleSignin = async (req: Request, res: Response): Promise<void> =
     let user = await User.findOne({ email });
 
     if (user) {
-      // Update existing user's info if needed
-      user.profile = {
-        ...user.profile,
-        // Could update additional Google-specific info here
-      };
-      await user.save();
+      // User already exists, no need to update profile
+      // Profile is already set from initial signup
     } else {
       // Create new user with default psychology-informed settings
       user = new User({

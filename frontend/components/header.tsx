@@ -19,6 +19,10 @@ export function Header() {
   const [notifications, setNotifications] = useState(3)
 
   const handleLogout = () => {
+    // Clear auth token from localStorage
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('hasSeenOnboarding')
+    // Sign out from NextAuth
     signOut({ callbackUrl: '/' })
   }
 
