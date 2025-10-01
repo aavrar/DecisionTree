@@ -74,12 +74,12 @@ export function OnboardingTutorial({ steps, onComplete, onSkip }: OnboardingTuto
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-[9998] bg-black/80 transition-opacity" />
+      <div className="fixed inset-0 z-[99998] bg-black/80 transition-opacity" />
 
       {/* Highlight */}
       {highlightPosition && (
         <div
-          className="fixed z-[9999] rounded-lg border-4 border-blue-500 pointer-events-none transition-all duration-300"
+          className="fixed z-[99999] rounded-lg border-4 border-blue-500 pointer-events-none transition-all duration-300"
           style={{
             top: `${highlightPosition.top - 8}px`,
             left: `${highlightPosition.left - 8}px`,
@@ -92,28 +92,9 @@ export function OnboardingTutorial({ steps, onComplete, onSkip }: OnboardingTuto
 
       {/* Tutorial Card */}
       <div
-        className="fixed z-[10000] bg-slate-900 rounded-xl border-2 border-blue-500 p-6 max-w-md w-full transition-all duration-300"
+        className="fixed z-[100000] bg-slate-900 rounded-xl border-2 border-blue-500 p-6 max-w-md w-full transition-all duration-300 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(59, 130, 246, 0.5)',
-          top: highlightPosition
-            ? step.position === "bottom"
-              ? `${highlightPosition.top + highlightPosition.height + 24}px`
-              : step.position === "top"
-              ? `${highlightPosition.top - 220}px`
-              : "50%"
-            : "50%",
-          left: highlightPosition
-            ? step.position === "right"
-              ? `${highlightPosition.left + highlightPosition.width + 24}px`
-              : step.position === "left"
-              ? `${highlightPosition.left - 420}px`
-              : `${highlightPosition.left + highlightPosition.width / 2}px`
-            : "50%",
-          transform: highlightPosition
-            ? step.position === "left" || step.position === "right"
-              ? "translateY(-50%)"
-              : "translateX(-50%)"
-            : "translate(-50%, -50%)",
         }}
       >
         {/* Header */}
