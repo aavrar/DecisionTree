@@ -1,207 +1,388 @@
-# DecisionTree
+# Branches - Choice Architecture Visualizer
 
-A modern, interactive decision-making tool that helps users make informed choices through visual decision trees, factor analysis, and gamification.
+A cutting-edge decision-making platform that combines psychology-informed design with interactive 3D visualization to help users make better, more confident decisions.
+
+**Live Demo**: [https://decision-tree-one.vercel.app](https://decision-tree-one.vercel.app)
 
 ## Overview
 
-DecisionTree is a full-stack application designed to assist users in making complex decisions by breaking them down into manageable factors, visualizing outcomes, and providing AI-powered insights. The application features interactive 3D/2D visualizations, gamification elements, and a comprehensive decision tracking system.
+Branches transforms complex decisions into beautiful, interactive visual trees. Using glassmorphic design, 3D visualization, and cognitive psychology principles, it guides users through structured decision-making while reducing stress and cognitive load.
 
-## Features
+## Key Features
 
-### Core Features
-- **Interactive Decision Trees** - Visual representation of decisions with 2D and 3D views
-- **Factor Analysis** - Weight and categorize decision factors by importance
-- **Decision Tracking** - Track decision history and outcomes
-- **Statistics Dashboard** - Monitor decision-making patterns and satisfaction rates
-- **Voice Input** - Add decision context using voice commands
-- **AI Suggestions** - Get AI-powered factor suggestions for better decision making
+### Core Decision-Making
+- **Interactive Decision Trees** - Build hierarchical decision structures with outcomes, consequences, and sub-decisions
+- **Smart Factor Analysis** - Weight factors by importance with visual feedback
+- **Emotional Context Tracking** - Monitor stress levels, confidence, and urgency throughout the process
+- **2D & 3D Visualizations** - Toggle between traditional tree view and immersive 3D cosmos mode
 
 ### Advanced Features
-- **Gamification System** - XP points, levels, badges, and streaks
-- **Real-time Visualization** - Animated decision tree with interactive nodes
-- **Drag & Drop Interface** - Reorder factors with intuitive drag-and-drop
-- **Theme Support** - Dark/light mode with smooth transitions
-- **Command Palette** - Quick actions with keyboard shortcuts (Cmd/Ctrl + K)
+- **Tree Builder Modal** - Full-featured editor with drag-and-drop node management
+- **Keyboard Shortcuts** - Power user features (Ctrl+K for command palette, Ctrl+S to save)
+- **Undo/Redo System** - 50-level history stack for mistake-free editing
+- **Search & Filter** - Find decisions by title, status, or date
+- **Interactive Onboarding** - Guided tutorial that creates your first decision
+- **Real-time Stats Dashboard** - Track decision count, satisfaction rates, and monthly trends
+
+### Design Excellence
+- **Glassmorphic UI** - Frosted glass effects with modern blur aesthetics
+- **3D Cosmos View** - Factors orbit your decision like planets in space
+- **Dark/Light Themes** - Smooth theme transitions with system preference detection
+- **Responsive Design** - Optimized for desktop, tablet, and mobile
+- **Micro-interactions** - Subtle animations that guide and delight
+
+### Security & Authentication
+- **Google OAuth 2.0** - Secure sign-in with your Google account
+- **JWT Authentication** - Token-based API security
+- **User Isolation** - Decisions are private and user-specific
+- **Auto-logout Cleanup** - Prevents data leakage between accounts
 
 ## Tech Stack
 
 ### Frontend
 - **Framework**: Next.js 15.2.4 with React 19
-- **Styling**: Tailwind CSS with custom animations
-- **UI Components**: Radix UI primitives
+- **Authentication**: NextAuth.js with Google OAuth
+- **Styling**: Tailwind CSS with custom glassmorphic design system
 - **3D Graphics**: React Three Fiber + Three.js
-- **Icons**: Lucide React
-- **Form Handling**: React Hook Form with Zod validation
+- **UI Components**: Radix UI primitives
+- **Animations**: Framer Motion + custom CSS transitions
+- **State Management**: React hooks with useCallback/useMemo optimization
+- **Deployment**: Vercel (Edge Network)
 
 ### Backend
 - **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT tokens with bcrypt password hashing
+- **Framework**: Express.js with middleware stack
+- **Database**: MongoDB Atlas (cloud-hosted)
+- **Authentication**: JWT with bcrypt password hashing
 - **Security**: Helmet, CORS, rate limiting
-- **Validation**: express-validator middleware
+- **Deployment**: Render (serverless backend)
+
+### Infrastructure
+- **Frontend**: Vercel (https://decision-tree-one.vercel.app)
+- **Backend**: Render (https://branches-0huw.onrender.com)
+- **Database**: MongoDB Atlas (cloud cluster)
+- **CDN**: Cloudflare (DNS & optimization)
 
 ## Project Structure
 
 ```
 CSSeminar/
-├── frontend/                 # Next.js frontend application
-│   ├── app/                 # App router pages
-│   ├── components/          # React components
-│   │   ├── ui/             # Reusable UI components
-│   │   ├── decision-form.tsx
-│   │   ├── visualization-area.tsx
-│   │   └── stats-grid.tsx
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility functions
-│   └── types/              # TypeScript type definitions
-├── backend/                # Express.js backend API
+├── frontend/                      # Next.js frontend application
+│   ├── app/
+│   │   ├── dashboard/            # Main dashboard page
+│   │   ├── signup/               # Authentication pages
+│   │   └── api/auth/             # NextAuth API routes
+│   ├── components/
+│   │   ├── ui/                   # Reusable UI primitives
+│   │   ├── decision-form.tsx     # Decision creation form
+│   │   ├── tree-visualization.tsx # 2D tree view
+│   │   ├── decision-cosmos-3d.tsx # 3D visualization
+│   │   ├── tree-builder-modal.tsx # Advanced tree editor
+│   │   ├── onboarding-tutorial.tsx # Interactive tutorial
+│   │   ├── decision-search-filter.tsx # Search & filter
+│   │   └── stats-grid.tsx        # Statistics display
+│   ├── hooks/
+│   │   ├── useDecisions.ts       # Decision CRUD operations
+│   │   ├── useUndoRedo.ts        # Undo/redo functionality
+│   │   └── useKeyboardShortcuts.ts # Keyboard shortcuts
+│   └── types/
+│       └── decision.ts           # TypeScript interfaces
+├── backend/                       # Express.js backend API
 │   └── src/
-│       ├── controllers/    # Route controllers
-│       ├── middleware/     # Custom middleware
-│       ├── models/        # MongoDB schemas
-│       ├── routes/        # API route definitions
-│       └── types/         # TypeScript interfaces
-├── plan.md                # Development roadmap
-└── README.md             # This file
+│       ├── controllers/
+│       │   ├── authController.ts # Authentication logic
+│       │   └── decisionController.ts # Decision CRUD
+│       ├── middleware/
+│       │   ├── auth.ts          # JWT verification
+│       │   └── validation.ts    # Input validation
+│       ├── models/
+│       │   ├── User.ts          # User schema
+│       │   └── Decision.ts      # Decision schema
+│       ├── routes/
+│       │   ├── authRoutes.ts    # Auth endpoints
+│       │   └── decisionRoutes.ts # Decision endpoints
+│       └── types/
+│           └── index.ts         # Backend interfaces
+├── plan.md                       # Development roadmap
+└── README.md                     # This file
 ```
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
-- MongoDB (optional for development)
-- npm or yarn package manager
+- Node.js 18+
+- MongoDB (local or Atlas account)
+- Google OAuth credentials
+- npm or yarn
 
-### Installation
+### Local Development Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd CSSeminar
+   git clone https://github.com/aavrar/DecisionTree.git
+   cd DecisionTree
    ```
 
-2. **Install backend dependencies**
+2. **Backend Setup**
    ```bash
    cd backend
    npm install
-   ```
 
-3. **Install frontend dependencies**
+   # Create .env file
+   cat > .env << EOF
+   NODE_ENV=development
+   PORT=5001
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_super_secret_jwt_key
+   JWT_EXPIRES_IN=7d
+   CORS_ORIGIN=http://localhost:3000
+   EOF
+
+   # Start backend
+   npm run dev
+   ```
+   Backend runs on http://localhost:5001
+
+3. **Frontend Setup**
    ```bash
    cd ../frontend
    npm install
-   ```
 
-4. **Set up environment variables**
-   
-   Backend - Create `backend/.env`:
-   ```env
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/decisiontree
-   JWT_SECRET=your-secret-key-here
-   JWT_EXPIRES_IN=7d
-   NODE_ENV=development
-   ```
+   # Create .env.local file
+   cat > .env.local << EOF
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret
+   GOOGLE_CLIENT_ID=your_google_oauth_client_id
+   GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+   NEXT_PUBLIC_API_URL=http://localhost:5001
+   EOF
 
-### Running the Application
-
-1. **Start the backend server**
-   ```bash
-   cd backend
-   npm run dev
-   ```
-   Backend runs on http://localhost:5000
-
-2. **Start the frontend development server**
-   ```bash
-   cd frontend
+   # Start frontend
    npm run dev
    ```
    Frontend runs on http://localhost:3000
 
+### Google OAuth Setup
+
+See [GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md) for detailed instructions on:
+- Creating a Google Cloud project
+- Configuring OAuth consent screen
+- Generating client credentials
+- Setting authorized redirect URIs
+
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+- `POST /api/auth/register` - User registration with email/password
+- `POST /api/auth/login` - User login (returns JWT)
+- `POST /api/auth/google-signin` - Google OAuth authentication
+- `GET /api/health` - Health check endpoint
 
 ### Decisions
-- `GET /api/decisions` - Get user's decisions
+- `GET /api/decisions` - Get user's decisions (paginated)
 - `POST /api/decisions` - Create new decision
 - `GET /api/decisions/:id` - Get specific decision
 - `PUT /api/decisions/:id` - Update decision
 - `DELETE /api/decisions/:id` - Delete decision
 - `GET /api/decisions/stats` - Get decision statistics
 
-## Development Phases
+**Authentication**: All decision endpoints require JWT token in Authorization header:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
-The project follows a 4-phase development plan:
+## Development Roadmap
 
-### Phase 1: Foundation (Weeks 1-2) ✅
-- Backend API setup with authentication
-- Frontend components and basic UI
-- Decision CRUD operations
-- Basic visualization
+### Checkpoint 1 (September 25, 2024) - COMPLETE
+- Decision input interface with emotional context
+- Factor management with importance sliders
+- Google OAuth authentication
+- Basic tree visualization
+- MongoDB integration
+- User session management
 
-### Phase 2: Intelligence (Weeks 3-4)
-- Advanced decision algorithms
-- AI-powered suggestions
-- Monte Carlo simulations
-- Outcome prediction
+### Checkpoint 2 (October 9, 2024) - COMPLETE
+- Advanced tree interactions (zoom, pan, edit nodes)
+- Tree Builder Modal with full CRUD operations
+- Enhanced dashboard with statistics
+- Search and filter functionality
+- Keyboard shortcuts system
+- Undo/redo with 50-level history
+- Interactive onboarding tutorial
+- 3D Cosmos visualization
+- Production deployment (Vercel + Render + MongoDB Atlas)
 
-### Phase 3: Engagement (Weeks 5-6)
-- Future self reflection system
-- Enhanced gamification
-- Social features
-- Advanced analytics
+### Checkpoint 3 (October 30, 2024) - IN PROGRESS
+- Complete user dashboard with patterns analysis
+- Decision outcome tracking system
+- Enhanced D3.js visualization with color coding
+- Psychology-informed insights
+- Decision regret prediction
 
-### Phase 4: Scale (Weeks 7-8)
-- Performance optimization
-- Advanced visualizations
-- Mobile responsiveness
-- Deployment preparation
+### Checkpoint 4 (November 20, 2024) - PLANNED
+- End-to-end user experience polish
+- Complex decision scenario handling
+- Comprehensive error handling
+- Performance optimization (Core Web Vitals)
+- Full production hardening
 
-## Key Features in Detail
+## Extra Credit Features
 
-### Decision Form
-- Dynamic factor management with drag-and-drop reordering
-- Category-based factor classification (financial, personal, career, health)
-- Weight sliders for importance ranking
-- Voice input for decision context
-- AI-powered factor suggestions
+### Tier 1: Game-Changing
+- [COMPLETE] **3D Interactive Decision Cosmos** - Three.js immersive visualization
+- [PLANNED] **AI Decision Psychology Engine** - Bias detection
+- [PLANNED] **Temporal Decision Lens** - Future self simulator
 
-### Visualization Area
-- Interactive 2D/3D decision tree views
-- Animated node transitions and connections
-- Confidence-based color coding
-- Real-time progress indicators
-- Export capabilities for decision trees
+### Tier 2: Technically Impressive
+- [PLANNED] **Voice-Controlled Decision Creation** - Speech-to-text
+- [COMPLETE] **Decision Emotional Intelligence** - Stress/confidence tracking
+- [PLANNED] **Collaborative Decision Intelligence** - Sharing & advisors
 
-### Gamification System
-- XP points awarded for decision activities
-- Level progression system
-- Achievement badges
-- Decision-making streaks
-- Satisfaction rate tracking
+### Tier 3: Professional Grade
+- [PLANNED] **Decision Portfolio Analytics** - Style analysis
+- [PLANNED] **Advanced Export & Reporting** - PDF reports
+- [PLANNED] **Decision Coaching AI** - Real-time suggestions
+
+## Design Philosophy
+
+### Glassmorphism + Psychology-Informed Design
+- **Frosted Glass Effects**: Blurred backgrounds with transparency layers
+- **Cognitive Load Management**: Progressive disclosure, max 5 choices per node (Miller's Law)
+- **Emotional Support**: Calm transitions, stress indicators, confidence building
+- **Trust Architecture**: Transparent data handling, privacy-first design
+
+### Color Psychology
+- **Blue Tones**: Trust and logic (financial decisions)
+- **Earth Tones**: Balance and growth (long-term planning)
+- **Warm Accents**: Energy and creativity (personal decisions)
+
+## Database Schema
+
+### User Model
+```typescript
+{
+  email: string
+  passwordHash: string
+  profile: {
+    decisionMakingStyle: "analytical" | "intuitive" | "balanced"
+    stressLevel: number (1-10)
+    emotionalState: {
+      confidence: number
+      urgency: number
+      anxiety: number
+    }
+  }
+  gamification: {
+    level: number
+    xp: number
+    streak: number
+    badges: string[]
+  }
+}
+```
+
+### Decision Model
+```typescript
+{
+  userId: ObjectId
+  title: string
+  description: string
+  factors: Factor[]
+  status: "draft" | "active" | "resolved" | "archived"
+  emotionalContext: {
+    initialStressLevel: number
+    confidenceLevel: number
+    urgencyRating: number
+  }
+}
+```
+
+### Factor Model (Nested)
+```typescript
+{
+  id: string
+  name: string
+  weight: number (0-100)
+  category: "financial" | "personal" | "career" | "health"
+  uncertainty: number (0-100)
+  emotionalWeight: number (0-100)
+  regretPotential: number (0-100)
+  children: TreeNodeData[] // Nested structure
+}
+```
+
+## Development Commands
+
+### Frontend
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+### Backend
+```bash
+npm run dev          # Start with nodemon (hot reload)
+npm run build        # Compile TypeScript
+npm start            # Start production server
+npm run lint         # Run ESLint
+```
+
+## Troubleshooting
+
+### Backend won't connect to MongoDB
+- Check MONGODB_URI in `.env`
+- Ensure MongoDB Atlas allows your IP address
+- Verify network connectivity
+
+### Google OAuth errors
+- Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+- Check authorized redirect URIs in Google Console
+- Ensure NEXTAUTH_URL matches your domain
+
+### CORS errors in production
+- Update CORS_ORIGIN in Render environment variables
+- Add frontend URL to backend CORS whitelist
+- Check browser console for specific origin errors
+
+### Frontend can't reach backend
+- Verify NEXT_PUBLIC_API_URL is set correctly
+- Check backend health endpoint: `curl https://branches-0huw.onrender.com/api/health`
+- Ensure Render backend is not sleeping (free tier limitation)
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-feature`)
-3. Commit changes (`git commit -m 'Add new feature'`)
-4. Push to branch (`git push origin feature/new-feature`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Coding Standards
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Write descriptive commit messages
+- Add comments for complex logic
+- Test on multiple browsers
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- **Psychology Research**: Based on cognitive load theory, choice architecture, and decision-making research
+- **Design Inspiration**: Glassmorphism trends from Dribbble and Behance 2024-2025
+- **Libraries**: Built on the shoulders of giants (React, Next.js, Three.js, and many more)
 
 ## Support
 
-For questions or support, please open an issue in the repository or contact the development team.
+For questions, issues, or feature requests:
+- Open an issue on GitHub
+- Contact: [your-email@example.com]
+- Documentation: See [plan.md](./plan.md) for detailed roadmap
 
 ---
 
-**Current Status**: Phase 1 complete - Backend API and frontend UI fully functional with mock data. Ready for Phase 2 implementation.
+**Current Status**: Checkpoint 2 Complete - Production deployment live with full authentication, 3D visualization, tree editing, search/filter, keyboard shortcuts, and undo/redo functionality.
