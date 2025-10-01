@@ -203,6 +203,16 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [status, router, session])
 
+  // Keep backend alive (Render free tier sleep prevention)
+  useEffect(() => {
+    const keepAlive = setInterval(() => {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/health`)
+        .catch(err => console.log('Keep-alive ping failed:', err))
+    }, 14 * 60 * 1000) // Every 14 minutes
+
+    return () => clearInterval(keepAlive)
+  }, [])
+
   // Check if user is new (show onboarding)
   useEffect(() => {
     if (status === "authenticated" && stats && stats.totalDecisions === 0) {
