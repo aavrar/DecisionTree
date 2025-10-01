@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { connectDatabase } from './config/database';
 import authRoutes from './routes/authRoutes';
 import decisionRoutes from './routes/decisionRoutes';
+import analysisRoutes from './routes/analysisRoutes';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use(morgan('dev'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/decisions', decisionRoutes);
+app.use('/api/decisions', analysisRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

@@ -22,8 +22,10 @@ import { ParticleField } from "@/components/ui/particle-field"
 import { TreeBuilderModal } from "@/components/tree-builder-modal"
 import { OnboardingTutorial, type TutorialStep } from "@/components/onboarding-tutorial"
 import { StarterTreeForm } from "@/components/starter-tree-form"
+import { DecisionAnalysisPanel } from "@/components/decision-analysis-panel"
 import type { Decision, DecisionStats, DecisionTreeNode, Factor } from "@/types/decision"
 import { useDecisions, useDecisionStats } from "@/hooks/useDecisions"
+import { useDecisionAnalysis } from "@/hooks/useDecisionAnalysis"
 
 const emptyDecision: Decision = {
   id: "",
@@ -56,9 +58,11 @@ export default function Dashboard() {
     sortBy: "newest"
   })
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
 
   const { stats, loading: statsLoading, refetch: refetchStats } = useDecisionStats()
   const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision, createDecision } = useDecisions({ limit: 10 })
+  const { analysis, loading: analyzing, error: analysisError, analyzeDecision } = useDecisionAnalysis()
 
   // Define addNotification early so it can be used in callbacks
   const addNotification = useCallback((message: string, type: "success" | "warning" | "error" = "success") => {
@@ -296,6 +300,33 @@ export default function Dashboard() {
     setTreeBuilderOpen(false)
   }
 
+  const handleAnalyzeDecision = useCallback(async () => {
+    if (!currentDecision.id) {
+      addNotification("Please save your decision first", "warning")
+      return
+    }
+
+    if (currentDecision.factors.length === 0) {
+      addNotification("Please add at least one factor to analyze", "warning")
+      return
+    }
+
+    addNotification("Analyzing decision...", "success")
+    await analyzeDecision(currentDecision.id)
+  }, [currentDecision, analyzeDecision, addNotification])
+
+  useEffect(() => {
+    if (analysis && !analyzing && !analysisError) {
+      setShowAnalysisPanel(true)
+    }
+  }, [analysis, analyzing, analysisError])
+
+  useEffect(() => {
+    if (analysisError) {
+      addNotification(analysisError, "error")
+    }
+  }, [analysisError, addNotification])
+
   // Filter and sort decisions based on search filters
   const filteredDecisions = decisions
     .filter(decision => {
@@ -415,6 +446,7 @@ export default function Dashboard() {
                 decision={currentDecision}
                 onNodeClick={handleNodeClick}
                 onContinueToBuilder={handleOpenTreeBuilder}
+                onAnalyze={handleAnalyzeDecision}
               />
             </div>
           </div>
@@ -484,6 +516,14 @@ export default function Dashboard() {
           steps={tutorialSteps}
           onComplete={handleCompleteOnboarding}
           onSkip={handleSkipOnboarding}
+        />
+      )}
+
+      {/* Analysis Panel */}
+      {showAnalysisPanel && analysis && (
+        <DecisionAnalysisPanel
+          analysis={analysis}
+          onClose={() => setShowAnalysisPanel(false)}
         />
       )}
     </div>

@@ -11,6 +11,7 @@ interface TreeVisualizationProps {
   height?: number
   onNodeClick?: (node: DecisionTreeNode) => void
   onContinueToBuilder?: () => void
+  onAnalyze?: () => void
 }
 
 // Utility function to get category color
@@ -260,7 +261,7 @@ const generateDecisionTree = (decision: Decision, containerWidth: number, contai
 }
 
 // Tree visualization component
-export function TreeVisualization({ decision, width = 800, height = 400, onNodeClick, onContinueToBuilder }: TreeVisualizationProps) {
+export function TreeVisualization({ decision, width = 800, height = 400, onNodeClick, onContinueToBuilder, onAnalyze }: TreeVisualizationProps) {
   const [scale, setScale] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -639,15 +640,25 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
         </svg>
       </div>
 
-      {/* Continue Button */}
-      {onContinueToBuilder && decision?.factors && decision.factors.length > 0 && (
-        <div className="p-4 bg-slate-900/50 border-t border-slate-700/50 flex justify-center">
-          <Button
-            onClick={onContinueToBuilder}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-          >
-            Continue to Tree Builder →
-          </Button>
+      {/* Action Buttons */}
+      {decision?.factors && decision.factors.length > 0 && (onContinueToBuilder || onAnalyze) && (
+        <div className="p-4 bg-slate-900/50 border-t border-slate-700/50 flex justify-center gap-3">
+          {onAnalyze && decision.id && (
+            <Button
+              onClick={onAnalyze}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-2 rounded-lg shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+            >
+              Analyze Decision
+            </Button>
+          )}
+          {onContinueToBuilder && (
+            <Button
+              onClick={onContinueToBuilder}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+            >
+              Continue to Tree Builder →
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -301,6 +301,14 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
     depth?: number
     index: number
   }) => {
+    const [localName, setLocalName] = useState(node.name)
+    const [localDescription, setLocalDescription] = useState(node.description || '')
+
+    useEffect(() => {
+      setLocalName(node.name)
+      setLocalDescription(node.description || '')
+    }, [node.name, node.description])
+
     const isExpanded = expandedNodes.has(node.id)
     const hasChildren = node.children && node.children.length > 0
 
@@ -348,14 +356,16 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
               {/* Node Name and Description */}
               <div className="flex-1 flex flex-col gap-1">
                 <Input
-                  value={node.name}
-                  onChange={(e) => handleUpdateNode(node.id, { name: e.target.value }, path)}
+                  value={localName}
+                  onChange={(e) => setLocalName(e.target.value)}
+                  onBlur={(e) => handleUpdateNode(node.id, { name: e.target.value }, path)}
                   className="bg-slate-800 border-slate-600 text-white text-sm"
                   placeholder="Node name..."
                 />
                 <Input
-                  value={node.description || ''}
-                  onChange={(e) => handleUpdateNode(node.id, { description: e.target.value }, path)}
+                  value={localDescription}
+                  onChange={(e) => setLocalDescription(e.target.value)}
+                  onBlur={(e) => handleUpdateNode(node.id, { description: e.target.value }, path)}
                   className="bg-slate-800 border-slate-600 text-slate-300 text-xs"
                   placeholder="Description (optional)..."
                 />
