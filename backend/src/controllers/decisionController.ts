@@ -25,7 +25,10 @@ export const createDecision = async (req: Request, res: Response): Promise<void>
         category: factor.category,
         description: factor.description,
         uncertainty: factor.uncertainty,
-        timeHorizon: factor.timeHorizon
+        timeHorizon: factor.timeHorizon,
+        emotionalWeight: factor.emotionalWeight,
+        regretPotential: factor.regretPotential,
+        children: factor.children || [] // Include nested children
       })),
       status
     });
@@ -177,7 +180,10 @@ export const updateDecision = async (req: Request, res: Response): Promise<void>
         category: factor.category,
         description: factor.description,
         uncertainty: factor.uncertainty,
-        timeHorizon: factor.timeHorizon
+        timeHorizon: factor.timeHorizon,
+        emotionalWeight: factor.emotionalWeight,
+        regretPotential: factor.regretPotential,
+        children: factor.children || [] // Include nested children
       }));
     }
 

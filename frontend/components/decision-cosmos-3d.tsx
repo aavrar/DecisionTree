@@ -395,6 +395,178 @@ function ParticleField() {
   )
 }
 
+// Child node sphere component that follows parent and has connection line
+function ChildNodeSphere({
+  node,
+  parentOrbitRadius,
+  parentOrbitSpeed,
+  parentStartAngle,
+  childIndex,
+  totalChildren,
+  onClick,
+  onHover
+}: {
+  node: any
+  parentOrbitRadius: number
+  parentOrbitSpeed: number
+  parentStartAngle: number
+  childIndex: number
+  totalChildren: number
+  onClick?: () => void
+  onHover?: (id: string | null) => void
+}) {
+  const meshRef = useRef<THREE.Mesh>(null!)
+  const labelRef = useRef<THREE.Group>(null!)
+  const percentRef = useRef<THREE.Group>(null!)
+  const lineRef = useRef<THREE.Line>(null!)
+  const [hovered, setHovered] = useState(false)
+
+  // Position child nodes radially around parent
+  const childOffset = 0.8
+  const childAngleOffset = (childIndex / totalChildren) * Math.PI * 2
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime()
+
+    // Calculate parent position
+    const parentAngle = (time * parentOrbitSpeed) + parentStartAngle
+    const parentX = Math.cos(parentAngle) * parentOrbitRadius
+    const parentZ = Math.sin(parentAngle) * parentOrbitRadius
+    const parentY = Math.sin(parentAngle * 0.5) * 0.2
+
+    if (meshRef.current) {
+      // Position child offset from parent
+      const childX = parentX + Math.cos(parentAngle + childAngleOffset) * childOffset
+      const childZ = parentZ + Math.sin(parentAngle + childAngleOffset) * childOffset
+      const childY = parentY - 0.3 * (childIndex + 1)
+
+      meshRef.current.position.set(childX, childY, childZ)
+      meshRef.current.rotation.y = time * 0.5
+    }
+
+    // Update connection line
+    if (lineRef.current && meshRef.current) {
+      const geometry = lineRef.current.geometry as THREE.BufferGeometry
+      const positions = geometry.attributes.position.array as Float32Array
+
+      positions[0] = parentX
+      positions[1] = parentY
+      positions[2] = parentZ
+      positions[3] = meshRef.current.position.x
+      positions[4] = meshRef.current.position.y
+      positions[5] = meshRef.current.position.z
+
+      geometry.attributes.position.needsUpdate = true
+    }
+
+    // Update labels to face camera
+    if (labelRef.current && meshRef.current) {
+      labelRef.current.position.set(
+        meshRef.current.position.x,
+        meshRef.current.position.y + 0.35,
+        meshRef.current.position.z
+      )
+      labelRef.current.rotation.set(0, 0, 0)
+      labelRef.current.lookAt(state.camera.position)
+    }
+
+    if (percentRef.current && meshRef.current) {
+      percentRef.current.position.set(
+        meshRef.current.position.x,
+        meshRef.current.position.y - 0.35,
+        meshRef.current.position.z
+      )
+      percentRef.current.rotation.set(0, 0, 0)
+      percentRef.current.lookAt(state.camera.position)
+    }
+  })
+
+  // Node type colors
+  const getChildColor = (type: string) => {
+    switch (type) {
+      case 'outcome': return '#3b82f6' // blue
+      case 'consequence': return '#8b5cf6' // purple
+      case 'option': return '#10b981' // green
+      case 'consideration': return '#f59e0b' // amber
+      default: return '#6b7280' // gray
+    }
+  }
+
+  // Create line geometry
+  const points = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0)
+  ]
+  const lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
+
+  return (
+    <group>
+      {/* Connection line to parent */}
+      <line ref={lineRef} geometry={lineGeometry}>
+        <lineBasicMaterial
+          color="#999"
+          transparent
+          opacity={0.5}
+          linewidth={2}
+        />
+      </line>
+
+      {/* Child sphere */}
+      <Sphere
+        ref={meshRef}
+        args={[0.18, 32, 32]}
+        onClick={() => {
+          onClick?.()
+          onHover?.(node.id)
+        }}
+        onPointerOver={() => {
+          setHovered(true)
+          onHover?.(node.id)
+        }}
+        onPointerOut={() => {
+          setHovered(false)
+          onHover?.(null)
+        }}
+      >
+        <meshStandardMaterial
+          color={getChildColor(node.type)}
+          emissive={getChildColor(node.type)}
+          emissiveIntensity={hovered ? 0.5 : 0.2}
+          transparent
+          opacity={0.85}
+          roughness={0.3}
+          metalness={0.2}
+        />
+      </Sphere>
+
+      {/* Node name label */}
+      <group ref={labelRef}>
+        <Text
+          fontSize={0.15}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={2}
+        >
+          {node.name}
+        </Text>
+      </group>
+
+      {/* Node type label */}
+      <group ref={percentRef}>
+        <Text
+          fontSize={0.12}
+          color="#aaa"
+          anchorX="center"
+          anchorY="middle"
+        >
+          {node.type}
+        </Text>
+      </group>
+    </group>
+  )
+}
+
 // Main 3D scene
 function Scene({
   decision,
@@ -439,18 +611,33 @@ function Scene({
     const startAngle = (index / factors.length) * Math.PI * 2 // Evenly distribute around circle
 
     return (
-      <FactorSphere
-        key={factor.id}
-        factor={factor}
-        position={[orbitRadius, yPosition, 0]}
-        orbitRadius={orbitRadius}
-        orbitSpeed={orbitSpeed}
-        startAngle={startAngle}
-        adventureState={adventureState}
-        allFactors={factors}
-        onClick={() => onNodeClick(factor.id)}
-        onHover={onNodeHover}
-      />
+      <React.Fragment key={factor.id}>
+        <FactorSphere
+          factor={factor}
+          position={[orbitRadius, yPosition, 0]}
+          orbitRadius={orbitRadius}
+          orbitSpeed={orbitSpeed}
+          startAngle={startAngle}
+          adventureState={adventureState}
+          allFactors={factors}
+          onClick={() => onNodeClick(factor.id)}
+          onHover={onNodeHover}
+        />
+        {/* Render child nodes following parent */}
+        {factor.children && factor.children.map((child: any, childIndex: number) => (
+          <ChildNodeSphere
+            key={child.id}
+            node={child}
+            parentOrbitRadius={orbitRadius}
+            parentOrbitSpeed={orbitSpeed}
+            parentStartAngle={startAngle}
+            childIndex={childIndex}
+            totalChildren={factor.children.length}
+            onClick={() => onNodeClick(child.id)}
+            onHover={onNodeHover}
+          />
+        ))}
+      </React.Fragment>
     )
   })
 

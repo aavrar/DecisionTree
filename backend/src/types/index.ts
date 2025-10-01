@@ -1,5 +1,15 @@
 import { Document } from 'mongoose';
 
+// Recursive tree node structure
+export interface ITreeNodeData {
+  id: string;
+  name: string;
+  type: 'outcome' | 'consequence' | 'option' | 'consideration';
+  weight?: number;
+  description?: string;
+  children?: ITreeNodeData[];
+}
+
 export interface IFactor {
   id: string;
   name: string;
@@ -10,6 +20,7 @@ export interface IFactor {
   timeHorizon: 'immediate' | 'short' | 'medium' | 'long';
   emotionalWeight: number; // 0-100
   regretPotential: number; // 0-100
+  children?: ITreeNodeData[]; // Support nested tree structure
 }
 
 export interface IDecision extends Document {

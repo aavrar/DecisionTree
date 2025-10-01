@@ -1,5 +1,39 @@
 import mongoose, { Schema } from 'mongoose';
-import { IDecision, IFactor } from '../types';
+import { IDecision, IFactor, ITreeNodeData } from '../types';
+
+// Recursive tree node schema
+const treeNodeSchema = new Schema<ITreeNodeData>({
+  id: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    maxlength: [100, 'Node name must be less than 100 characters']
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ['outcome', 'consequence', 'option', 'consideration']
+  },
+  weight: {
+    type: Number,
+    min: [0, 'Weight must be between 0 and 100'],
+    max: [100, 'Weight must be between 0 and 100']
+  },
+  description: {
+    type: String,
+    maxlength: [500, 'Description must be less than 500 characters']
+  },
+  children: {
+    type: [Schema.Types.Mixed],
+    default: []
+  }
+}, { _id: false });
+
+// Enable recursive nesting
+treeNodeSchema.add({ children: [treeNodeSchema] });
 
 const factorSchema = new Schema<IFactor>({
   id: {
@@ -48,6 +82,10 @@ const factorSchema = new Schema<IFactor>({
     min: [0, 'Regret potential must be between 0 and 100'],
     max: [100, 'Regret potential must be between 0 and 100'],
     default: 50
+  },
+  children: {
+    type: [treeNodeSchema],
+    default: []
   }
 });
 

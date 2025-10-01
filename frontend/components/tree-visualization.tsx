@@ -344,6 +344,43 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
     img.src = url
   }
 
+  const handleExportJSON = () => {
+    // Count total nodes recursively
+    const countNodes = (children?: any[]): number => {
+      if (!children || children.length === 0) return 0
+      return children.reduce((sum, child) => sum + 1 + countNodes(child.children), 0)
+    }
+
+    const totalNodes = decision.factors.reduce((sum, factor) =>
+      sum + 1 + countNodes(factor.children), 0
+    )
+
+    const exportData = {
+      decision: {
+        title: decision.title,
+        description: decision.description,
+        factors: decision.factors,
+        status: decision.status,
+        emotionalContext: decision.emotionalContext,
+      },
+      metadata: {
+        exportDate: new Date().toISOString(),
+        totalFactors: decision.factors.length,
+        totalNodes: totalNodes,
+        version: '1.0'
+      }
+    }
+
+    const jsonString = JSON.stringify(exportData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${decision.title || 'decision-tree'}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (!decision.title && decision.factors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
@@ -382,7 +419,7 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4" />
               </Button>
-              <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <button
                   onClick={handleExportPNG}
                   className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-md"
@@ -391,9 +428,15 @@ export function TreeVisualization({ decision, width = 800, height = 400, onNodeC
                 </button>
                 <button
                   onClick={handleExportSVG}
-                  className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-md"
+                  className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Export SVG
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-md"
+                >
+                  Export JSON
                 </button>
               </div>
             </div>

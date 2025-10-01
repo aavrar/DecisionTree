@@ -49,7 +49,7 @@ export default function Dashboard() {
   const [treeBuilderOpen, setTreeBuilderOpen] = useState(false)
 
   const { stats, loading: statsLoading, refetch: refetchStats } = useDecisionStats()
-  const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision } = useDecisions({ limit: 10 })
+  const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision } = useDecisions({ limit: 10 })
 
   useEffect(() => {
     // Redirect to signup if not authenticated
@@ -151,9 +151,24 @@ export default function Dashboard() {
     setTreeBuilderOpen(true)
   }
 
-  const handleSaveTreeChanges = (updatedDecision: Decision) => {
+  const handleSaveTreeChanges = async (updatedDecision: Decision) => {
     setCurrentDecision(updatedDecision)
-    addNotification("Tree changes saved!", "success")
+
+    // Save to backend if decision has an ID (already created)
+    if (updatedDecision.id) {
+      const success = await updateDecision(updatedDecision.id, updatedDecision)
+      if (success) {
+        addNotification("Tree changes saved to database!", "success")
+        refetchStats()
+        refetchDecisions()
+      } else {
+        addNotification("Failed to save tree changes", "error")
+        return
+      }
+    } else {
+      addNotification("Tree changes saved locally (create decision first)", "warning")
+    }
+
     setTreeBuilderOpen(false)
   }
 
