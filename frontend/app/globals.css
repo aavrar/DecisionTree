@@ -491,6 +491,65 @@
     }
   }
 
+  /* Network card drift animations */
+  .animate-drift {
+    animation: drift 8s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(10px, -15px);
+    }
+    50% {
+      transform: translate(-5px, -20px);
+    }
+    75% {
+      transform: translate(-10px, -10px);
+    }
+  }
+
+  /* Pulsing connection line animation */
+  .animate-pulse-line {
+    animation: pulseLine 3s ease-in-out infinite;
+  }
+
+  @keyframes pulseLine {
+    0%,
+    100% {
+      stroke-opacity: 0.2;
+      stroke-width: 1;
+    }
+    50% {
+      stroke-opacity: 0.6;
+      stroke-width: 2;
+    }
+  }
+
+  /* Wave flow for background */
+  .animate-wave-flow {
+    animation: waveFlow 20s ease-in-out infinite;
+  }
+
+  @keyframes waveFlow {
+    0%,
+    100% {
+      transform: translateX(0) translateY(0);
+    }
+    25% {
+      transform: translateX(10px) translateY(-5px);
+    }
+    50% {
+      transform: translateX(0) translateY(-10px);
+    }
+    75% {
+      transform: translateX(-10px) translateY(-5px);
+    }
+  }
+
   /* NUCLEAR CSS OVERRIDE - Maximum Specificity Force Black Text */
   
   /* Target input elements with maximum specificity */

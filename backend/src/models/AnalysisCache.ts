@@ -38,7 +38,6 @@ const analysisCacheSchema = new Schema<IAnalysisCache>(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     hitCount: {
       type: Number,

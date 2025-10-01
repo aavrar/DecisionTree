@@ -43,6 +43,13 @@ export interface TreeNodeData {
   weight?: number
   description?: string
   children?: TreeNodeData[]
+  ccs?: number // Choice Consequence Score
+  notes?: string // User notes for this node
+  // Node-level attributes
+  importance?: number // 0-100 - How critical is this node
+  emotionalWeight?: number // 0-100 - Emotional impact of this node
+  uncertainty?: number // 0-100 - How uncertain is this outcome
+  regretPotential?: number // 0-100 - Potential for future regret
 }
 
 export interface DecisionStats {

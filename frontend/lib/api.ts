@@ -85,7 +85,7 @@ export const api = {
     },
 
     async googleSignin(email: string, name: string, image?: string, googleId?: string) {
-      const response = await fetchWithAuth('/api/auth/google', {
+      const response = await fetchWithAuth('/api/auth/google-signin', {
         method: 'POST',
         body: JSON.stringify({ email, name, image, googleId }),
       })

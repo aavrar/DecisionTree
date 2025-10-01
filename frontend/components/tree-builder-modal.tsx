@@ -464,22 +464,22 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="w-[95vw] h-[95vh] bg-slate-900 rounded-xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-[95vw] h-[95vh] bg-black rounded-xl border-2 border-white/20 shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
+        <div className="flex items-center justify-between p-6 border-b border-white/20 bg-black">
           <div>
             <h2 className="text-2xl font-bold text-white">{decision?.title || 'Untitled Decision'}</h2>
-            <p className="text-sm text-slate-400">Interactive Tree Builder</p>
+            <p className="text-sm text-gray-400">Interactive Tree Builder</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Undo/Redo Buttons */}
-            <div className="flex items-center gap-1 border-r border-slate-700 pr-3">
+            <div className="flex items-center gap-1 border-r border-white/20 pr-3">
               <Button
                 onClick={undo}
                 disabled={!canUndo}
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Undo (Ctrl + Z)"
               >
                 <Undo className="h-4 w-4" />
@@ -489,7 +489,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                 disabled={!canRedo}
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Redo (Ctrl + Shift + Z)"
               >
                 <Redo className="h-4 w-4" />
@@ -501,20 +501,20 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
               onClick={() => setShowShortcuts(!showShortcuts)}
               variant="ghost"
               size="sm"
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-gray-400 hover:text-white hover:bg-white/10"
               title="Keyboard shortcuts (Shift + ?)"
             >
               <Keyboard className="h-4 w-4" />
             </Button>
 
             {/* View Toggle */}
-            <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+            <div className="flex bg-white/5 rounded-lg p-1 border border-white/20">
               <button
                 onClick={() => setViewMode("2d")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                   viewMode === "2d"
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-black"
+                    : "text-gray-400 hover:text-white"
                 }`}
               >
                 2D View
@@ -523,8 +523,8 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                 onClick={() => setViewMode("3d")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                   viewMode === "3d"
-                    ? "bg-purple-600 text-white"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-black"
+                    : "text-gray-400 hover:text-white"
                 }`}
               >
                 3D View
@@ -532,7 +532,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
             </div>
             <Button
               onClick={handleSave}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+              className="bg-white text-black hover:bg-gray-200 font-semibold"
             >
               <Save className="h-4 w-4 mr-2" />
               Save Changes
@@ -540,7 +540,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
             <Button
               onClick={onClose}
               variant="ghost"
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-gray-400 hover:text-white hover:bg-white/10"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -549,13 +549,13 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
 
         {/* Keyboard Shortcuts Help Panel */}
         {showShortcuts && (
-          <div className="px-6 py-4 bg-slate-800/50 border-b border-slate-700">
+          <div className="px-6 py-4 bg-white/5 border-b border-white/20">
             <h3 className="text-sm font-semibold text-white mb-3">Keyboard Shortcuts</h3>
             <div className="grid grid-cols-2 gap-3">
               {shortcuts.map((shortcut, index) => (
                 <div key={index} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">{shortcut.description}</span>
-                  <kbd className="px-2 py-1 bg-slate-700 rounded text-slate-200 font-mono">
+                  <span className="text-gray-400">{shortcut.description}</span>
+                  <kbd className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white font-mono">
                     {shortcut.ctrl && 'Ctrl + '}
                     {shortcut.shift && 'Shift + '}
                     {shortcut.alt && 'Alt + '}
@@ -570,10 +570,10 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex">
           {/* Left Side: Tree Editor */}
-          <div className={`${viewMode === "3d" ? "w-1/3" : "flex-1"} overflow-auto p-6 border-r border-slate-700 transition-all duration-300`}>
+          <div className={`${viewMode === "3d" ? "w-1/3" : "flex-1"} overflow-auto p-6 border-r border-white/10 transition-all duration-300`}>
             {viewMode === "2d" ? (
               <div className="space-y-6">
-                <div className="text-slate-300 text-sm">
+                <div className="text-gray-300 text-sm">
                   <p className="mb-4">
                     Click on any factor node below to add child nodes. Build a complete decision tree
                     by adding outcomes, consequences, and sub-decisions.
@@ -582,7 +582,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
 
                 {/* Debug Info */}
                 {(!editingDecision?.factors || editingDecision.factors.length === 0) && (
-                  <div className="text-center py-12 text-slate-400">
+                  <div className="text-center py-12 text-gray-400">
                     <p className="text-lg mb-2">No factors found</p>
                     <p className="text-sm">Please add factors to your decision first</p>
                   </div>
@@ -594,7 +594,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                     {editingDecision?.factors?.map((factor, factorIndex) => (
                       <div
                         key={factor.id}
-                        className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-all"
+                        className="p-4 bg-black/40 rounded-lg border border-white/10 hover:border-white/20 transition-all"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -606,7 +606,7 @@ export function TreeBuilderModal({ isOpen, onClose, decision, onSave }: TreeBuil
                             }`} />
                             <div>
                               <h3 className="text-white font-semibold">{factor.name}</h3>
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-gray-400">
                                 Factor • Weight: {factor.weight}% • {factor.category}
                               </p>
                             </div>
