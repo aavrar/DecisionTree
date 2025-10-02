@@ -89,7 +89,7 @@ export default function Dashboard() {
     const keepAlive = setInterval(() => {
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/health`)
         .catch(err => console.log('Keep-alive ping failed:', err))
-    }, 14 * 60 * 1000) // Every 14 minutes
+    }, 10 * 60 * 1000) // Every 14 minutes
 
     return () => clearInterval(keepAlive)
   }, [])
