@@ -70,13 +70,36 @@ export class GeminiService {
       weight: f.weight,
       category: f.category,
       description: f.description,
+      address: f.address,
       importance: f.importance,
       emotionalWeight: f.emotionalWeight,
       uncertainty: f.uncertainty,
       regretPotential: f.regretPotential,
       timeHorizon: f.timeHorizon,
-      children: f.children || [], // Include full nested children
+      children: f.children || [],
     }));
+
+    // Check if any factors or nodes have addresses
+    const hasAddresses = decision.factors.some(f => {
+      if (f.address) return true;
+
+      const checkChildren = (children: any[]): boolean => {
+        if (!children || children.length === 0) return false;
+        return children.some(child => {
+          if (child.address) return true;
+          if (child.children) return checkChildren(child.children);
+          return false;
+        });
+      };
+
+      return checkChildren(f.children || []);
+    });
+
+    const locationContext = hasAddresses ? `
+
+LOCATION CONTEXT:
+Some factors or outcomes in this decision have location addresses. Consider these addresses when making your recommendation, as location can significantly impact quality of life, commute times, and practical feasibility.
+` : '';
 
     return `You are an expert decision psychologist analyzing a user's decision tree. Your job is to provide CLEAR, DIRECT, ACTIONABLE recommendations.
 
@@ -91,6 +114,7 @@ Decision Context:
 - Description: "${decision.description || 'No description provided'}"
 - Status: ${decision.status}
 - Emotional State: Stress=${stress}/10, Confidence=${confidence}/10, Urgency=${urgency}/10
+${locationContext}
 
 FULL DECISION TREE STRUCTURE (with all nested children/outcomes):
 ${JSON.stringify(decisionTree, null, 2)}

@@ -1,3 +1,5 @@
+import type { LocationData } from "./location"
+
 export interface Decision {
   id: string
   title: string
@@ -18,6 +20,7 @@ export interface Decision {
     viewMode: "2d" | "3d" | "auto"
     colorScheme: "trust" | "balance" | "energy"
   }
+  locationData?: LocationData
 }
 
 export interface Factor {
@@ -27,13 +30,12 @@ export interface Factor {
   weight: number // 0-100
   category: "financial" | "personal" | "career" | "health"
   description?: string
-  // Enhanced properties from Phase 1 plan
+  address?: string
   importance?: number // 0-100 - How critical is this factor
   uncertainty?: number // 0-100
   timeHorizon?: "immediate" | "short" | "medium" | "long"
   emotionalWeight?: number // 0-100
   regretPotential?: number // 0-100
-  // Tree structure - factors can have child nodes
   children?: TreeNodeData[]
 }
 
@@ -45,10 +47,10 @@ export interface TreeNodeData {
   category?: "financial" | "personal" | "career" | "health"
   weight?: number
   description?: string
+  address?: string
   children?: TreeNodeData[]
   ccs?: number // Choice Consequence Score
-  notes?: string // User notes for this node
-  // Node-level attributes
+  notes?: string
   importance?: number // 0-100 - How critical is this node
   emotionalWeight?: number // 0-100 - Emotional impact of this node
   uncertainty?: number // 0-100 - How uncertain is this outcome

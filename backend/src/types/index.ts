@@ -8,6 +8,7 @@ export interface ITreeNodeData {
   category?: 'financial' | 'personal' | 'career' | 'health';
   weight?: number; // 0-100 - Normalized weight among siblings
   description?: string;
+  address?: string;
   importance?: number; // 0-100
   emotionalWeight?: number; // 0-100
   uncertainty?: number; // 0-100
@@ -24,6 +25,7 @@ export interface IFactor {
   weight: number; // 0-100 - Normalized weight among siblings
   category: 'financial' | 'personal' | 'career' | 'health';
   description?: string;
+  address?: string;
   importance?: number; // 0-100 - How critical is this factor
   uncertainty?: number; // 0-100
   timeHorizon?: 'immediate' | 'short' | 'medium' | 'long';
@@ -48,6 +50,34 @@ export interface IDecision extends Document {
     complexity: 'simple' | 'detailed';
     viewMode: '2d' | '3d' | 'auto';
     colorScheme: 'trust' | 'balance' | 'energy';
+  };
+  locationData?: {
+    homeAddress?: {
+      formatted: string;
+      lat: number;
+      lng: number;
+    };
+    options: Array<{
+      id: string;
+      label: string;
+      address: {
+        formatted: string;
+        lat: number;
+        lng: number;
+      };
+      commuteTime?: number;
+      commuteDistance?: number;
+    }>;
+    importantPlaces: Array<{
+      name: string;
+      address: {
+        formatted: string;
+        lat: number;
+        lng: number;
+      };
+      category?: string;
+    }>;
+    commuteMode: 'driving' | 'walking' | 'cycling';
   };
   createdAt: Date;
   updatedAt: Date;

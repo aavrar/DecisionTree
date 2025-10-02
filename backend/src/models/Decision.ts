@@ -30,6 +30,9 @@ const treeNodeSchema = new Schema<ITreeNodeData>({
     type: String,
     maxlength: [500, 'Description must be less than 500 characters']
   },
+  address: {
+    type: String
+  },
   importance: {
     type: Number,
     min: [0, 'Importance must be between 0 and 100'],
@@ -94,6 +97,9 @@ const factorSchema = new Schema<IFactor>({
   description: {
     type: String,
     maxlength: [500, 'Description must be less than 500 characters']
+  },
+  address: {
+    type: String
   },
   importance: {
     type: Number,
@@ -197,6 +203,38 @@ const decisionSchema = new Schema<IDecision>(
         type: String,
         enum: ['trust', 'balance', 'energy'],
         default: 'trust'
+      }
+    },
+    locationData: {
+      homeAddress: {
+        formatted: String,
+        lat: Number,
+        lng: Number
+      },
+      options: [{
+        id: String,
+        label: String,
+        address: {
+          formatted: String,
+          lat: Number,
+          lng: Number
+        },
+        commuteTime: Number,
+        commuteDistance: Number
+      }],
+      importantPlaces: [{
+        name: String,
+        address: {
+          formatted: String,
+          lat: Number,
+          lng: Number
+        },
+        category: String
+      }],
+      commuteMode: {
+        type: String,
+        enum: ['driving', 'walking', 'cycling'],
+        default: 'driving'
       }
     }
   },

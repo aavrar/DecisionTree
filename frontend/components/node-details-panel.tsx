@@ -1,6 +1,6 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,6 +18,7 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
   const [localName, setLocalName] = useState("")
   const [localDescription, setLocalDescription] = useState("")
   const [localNotes, setLocalNotes] = useState("")
+  const [localAddress, setLocalAddress] = useState("")
   const [localType, setLocalType] = useState<"outcome" | "consequence" | "option" | "consideration">("outcome")
   const [localCategory, setLocalCategory] = useState<"financial" | "personal" | "career" | "health">("personal")
   const [showTypeMenu, setShowTypeMenu] = useState(false)
@@ -32,15 +33,15 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       setLocalName(node.name || "")
       setLocalDescription(node.description || "")
       setLocalNotes(node.notes || "")
+      setLocalAddress(node.address || "")
       setLocalType(node.type)
       setLocalCategory(node.category || "personal")
-      // Load persisted values or default to 50
       setImportance(node.importance ?? 50)
       setEmotionalWeight(node.emotionalWeight ?? 50)
       setUncertainty(node.uncertainty ?? 50)
       setRegretPotential(node.regretPotential ?? 50)
     }
-  }, [node.id]) // Only re-run when node ID changes, not when node object changes
+  }, [node.id])
 
   if (!node) return null
 
@@ -49,13 +50,13 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       name: localName,
       description: localDescription,
       notes: localNotes,
+      address: localAddress,
       type: localType,
       category: localCategory,
       importance,
       emotionalWeight,
       uncertainty,
       regretPotential,
-      // Weight will be calculated and normalized by the parent component
     })
     onClose()
   }
@@ -207,6 +208,21 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
             className="mt-2 bg-white/5 border-white/20 text-white min-h-[100px]"
             placeholder="Enter description"
           />
+        </div>
+
+        {/* Address */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="w-4 h-4 text-blue-400" />
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location Address</label>
+          </div>
+          <Input
+            value={localAddress}
+            onChange={(e) => setLocalAddress(e.target.value)}
+            className="bg-white/5 border-white/20 text-white"
+            placeholder="e.g., 1 Infinite Loop, Cupertino, CA"
+          />
+          <p className="text-xs text-gray-500 mt-2">Optional: Add an address for AI to consider during analysis</p>
         </div>
 
         {/* CCS Score (if available) */}
