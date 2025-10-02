@@ -1,6 +1,7 @@
 "use client"
 
-import { Plus, ChevronRight } from "lucide-react"
+import { useState } from "react"
+import { Plus, ChevronRight, Trash2, Archive, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Decision } from "@/types/decision"
 
@@ -9,6 +10,8 @@ interface ActiveBranchesSidebarProps {
   selectedDecisionId?: string
   onSelectDecision: (decision: Decision) => void
   onCreateNew: () => void
+  onDeleteDecision?: (decisionId: string) => void
+  onArchiveDecision?: (decisionId: string) => void
   loading?: boolean
 }
 
@@ -17,8 +20,11 @@ export function ActiveBranchesSidebar({
   selectedDecisionId,
   onSelectDecision,
   onCreateNew,
+  onDeleteDecision,
+  onArchiveDecision,
   loading
 }: ActiveBranchesSidebarProps) {
+  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null)
   const activeBranches = decisions.filter(d => d.status !== "archived")
 
   return (
@@ -43,47 +49,99 @@ export function ActiveBranchesSidebar({
           </div>
         ) : (
           activeBranches.map((decision) => (
-            <button
-              key={decision.id}
-              onClick={() => onSelectDecision(decision)}
-              className={`w-full text-left p-4 rounded-lg border transition-all group ${
-                selectedDecisionId === decision.id
-                  ? "bg-white/10 border-white/30"
-                  : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium text-sm truncate mb-1">
-                    {decision.title || "Untitled Decision"}
-                  </h3>
-                  {decision.description && (
-                    <p className="text-gray-400 text-xs truncate mb-2">
-                      {decision.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>{decision.factors?.length || 0} factors</span>
-                    <span className={`px-2 py-0.5 rounded ${
-                      decision.status === "draft" ? "bg-yellow-500/20 text-yellow-400" :
-                      decision.status === "active" ? "bg-green-500/20 text-green-400" :
-                      "bg-gray-500/20 text-gray-400"
-                    }`}>
-                      {decision.status}
-                    </span>
+            <div key={decision.id} className="relative">
+              <div
+                className={`w-full text-left p-4 rounded-lg border transition-all group ${
+                  selectedDecisionId === decision.id
+                    ? "bg-white/10 border-white/30"
+                    : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div
+                    className="flex-1 min-w-0 pr-2 cursor-pointer"
+                    onClick={() => onSelectDecision(decision)}
+                  >
+                    <h3 className="text-white font-medium text-sm truncate mb-1">
+                      {decision.title || "Untitled Decision"}
+                    </h3>
+                    {decision.description && (
+                      <p className="text-gray-400 text-xs truncate mb-2">
+                        {decision.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span>{decision.factors?.length || 0} factors</span>
+                      <span className={`px-2 py-0.5 rounded ${
+                        decision.status === "draft" ? "bg-yellow-500/20 text-yellow-400" :
+                        decision.status === "active" ? "bg-green-500/20 text-green-400" :
+                        "bg-gray-500/20 text-gray-400"
+                      }`}>
+                        {decision.status}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setMenuOpenFor(menuOpenFor === decision.id ? null : decision.id)
+                    }}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <MoreVertical className="w-4 h-4 text-gray-400 hover:text-white" />
+                  </button>
                 </div>
-                <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${
-                  selectedDecisionId === decision.id ? "text-white rotate-90" : "group-hover:translate-x-1"
-                }`} />
               </div>
-            </button>
+
+              {/* Dropdown Menu */}
+              {menuOpenFor === decision.id && (
+                <div className="absolute right-2 top-12 z-20 bg-black border border-white/20 rounded-lg shadow-xl overflow-hidden min-w-[150px]">
+                  {onArchiveDecision && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onArchiveDecision(decision.id)
+                        setMenuOpenFor(null)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                      <Archive className="w-4 h-4" />
+                      Archive
+                    </button>
+                  )}
+                  {onDeleteDecision && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm(`Delete "${decision.title || 'Untitled Decision'}"? This cannot be undone.`)) {
+                          onDeleteDecision(decision.id)
+                        }
+                        setMenuOpenFor(null)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           ))
         )}
       </div>
 
       {/* Create New Button */}
       <div className="p-4 border-t border-white/10">
+        <a
+          href="https://aahadv.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center mb-3 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:border-white/20 transition-all"
+        >
+          <span className="text-xs text-gray-400">Made by</span>
+          <span className="text-sm font-semibold text-white ml-1">Aahad Vakani</span>
+        </a>
         <Button
           onClick={onCreateNew}
           className="w-full bg-white/5 border-2 border-white/20 text-white font-medium py-3 rounded-lg hover:bg-white/10 hover:border-white/30 transition-all hover:scale-105"

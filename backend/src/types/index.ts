@@ -5,21 +5,30 @@ export interface ITreeNodeData {
   id: string;
   name: string;
   type: 'outcome' | 'consequence' | 'option' | 'consideration';
-  weight?: number;
+  category?: 'financial' | 'personal' | 'career' | 'health';
+  weight?: number; // 0-100 - Normalized weight among siblings
   description?: string;
+  importance?: number; // 0-100
+  emotionalWeight?: number; // 0-100
+  uncertainty?: number; // 0-100
+  regretPotential?: number; // 0-100
+  notes?: string;
+  ccs?: number; // Choice Consequence Score
   children?: ITreeNodeData[];
 }
 
 export interface IFactor {
   id: string;
   name: string;
-  weight: number; // 0-100
+  type?: 'outcome' | 'consequence' | 'option' | 'consideration';
+  weight: number; // 0-100 - Normalized weight among siblings
   category: 'financial' | 'personal' | 'career' | 'health';
   description?: string;
-  uncertainty: number; // 0-100
-  timeHorizon: 'immediate' | 'short' | 'medium' | 'long';
-  emotionalWeight: number; // 0-100
-  regretPotential: number; // 0-100
+  importance?: number; // 0-100 - How critical is this factor
+  uncertainty?: number; // 0-100
+  timeHorizon?: 'immediate' | 'short' | 'medium' | 'long';
+  emotionalWeight?: number; // 0-100
+  regretPotential?: number; // 0-100
   children?: ITreeNodeData[]; // Support nested tree structure
 }
 

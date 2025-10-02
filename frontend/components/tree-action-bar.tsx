@@ -10,6 +10,7 @@ interface TreeActionBarProps {
   onDeleteNode: () => void
   onEditNode: () => void
   analyzing?: boolean
+  cooldownSeconds?: number
 }
 
 export function TreeActionBar({
@@ -19,17 +20,20 @@ export function TreeActionBar({
   onDeleteNode,
   onEditNode,
   analyzing = false,
+  cooldownSeconds = 0,
 }: TreeActionBarProps) {
+  const isDisabled = analyzing || cooldownSeconds > 0
+
   return (
     <div className="flex items-center gap-3 p-4 bg-black border-b border-white/10">
       {/* AI Analysis */}
       <Button
         onClick={onAnalyze}
-        disabled={analyzing}
-        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold gap-2"
+        disabled={isDisabled}
+        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Sparkles className="w-4 h-4" />
-        {analyzing ? "Analyzing..." : "AI Analysis"}
+        {analyzing ? "Analyzing..." : cooldownSeconds > 0 ? `Wait ${cooldownSeconds}s` : "AI Analysis"}
       </Button>
 
       {/* Add Node */}

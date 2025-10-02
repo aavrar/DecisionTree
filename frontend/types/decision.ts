@@ -23,10 +23,12 @@ export interface Decision {
 export interface Factor {
   id: string
   name: string
+  type?: "outcome" | "consequence" | "option" | "consideration"
   weight: number // 0-100
   category: "financial" | "personal" | "career" | "health"
   description?: string
   // Enhanced properties from Phase 1 plan
+  importance?: number // 0-100 - How critical is this factor
   uncertainty?: number // 0-100
   timeHorizon?: "immediate" | "short" | "medium" | "long"
   emotionalWeight?: number // 0-100
@@ -40,6 +42,7 @@ export interface TreeNodeData {
   id: string
   name: string
   type: "outcome" | "consequence" | "option" | "consideration"
+  category?: "financial" | "personal" | "career" | "health"
   weight?: number
   description?: string
   children?: TreeNodeData[]

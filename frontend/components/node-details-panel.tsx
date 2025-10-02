@@ -19,7 +19,9 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
   const [localDescription, setLocalDescription] = useState("")
   const [localNotes, setLocalNotes] = useState("")
   const [localType, setLocalType] = useState<"outcome" | "consequence" | "option" | "consideration">("outcome")
+  const [localCategory, setLocalCategory] = useState<"financial" | "personal" | "career" | "health">("personal")
   const [showTypeMenu, setShowTypeMenu] = useState(false)
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [importance, setImportance] = useState(50)
   const [emotionalWeight, setEmotionalWeight] = useState(50)
   const [uncertainty, setUncertainty] = useState(50)
@@ -31,12 +33,14 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       setLocalDescription(node.description || "")
       setLocalNotes(node.notes || "")
       setLocalType(node.type)
+      setLocalCategory(node.category || "personal")
+      // Load persisted values or default to 50
       setImportance(node.importance ?? 50)
       setEmotionalWeight(node.emotionalWeight ?? 50)
       setUncertainty(node.uncertainty ?? 50)
       setRegretPotential(node.regretPotential ?? 50)
     }
-  }, [node])
+  }, [node.id]) // Only re-run when node ID changes, not when node object changes
 
   if (!node) return null
 
@@ -46,19 +50,32 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       description: localDescription,
       notes: localNotes,
       type: localType,
+      category: localCategory,
       importance,
       emotionalWeight,
       uncertainty,
       regretPotential,
+      // Weight will be calculated and normalized by the parent component
     })
     onClose()
   }
+
+  // Calculate raw weight from slider values (will be normalized by parent)
+  // High uncertainty and regret potential decrease weight
+  const rawWeight = Math.round((importance + emotionalWeight + (100 - uncertainty) + (100 - regretPotential)) / 4)
 
   const nodeTypes: Array<"outcome" | "consequence" | "option" | "consideration"> = [
     "outcome",
     "consequence",
     "option",
     "consideration"
+  ]
+
+  const categories: Array<"financial" | "personal" | "career" | "health"> = [
+    "financial",
+    "personal",
+    "career",
+    "health"
   ]
 
   const getTypeStyles = (type: string) => {
@@ -71,6 +88,21 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
         return "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
       case "consideration":
         return "bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30"
+      default:
+        return "bg-gray-500/20 text-gray-300 border-gray-500/30 hover:bg-gray-500/30"
+    }
+  }
+
+  const getCategoryStyles = (category: string) => {
+    switch (category) {
+      case "financial":
+        return "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
+      case "personal":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30"
+      case "career":
+        return "bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30"
+      case "health":
+        return "bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30"
       default:
         return "bg-gray-500/20 text-gray-300 border-gray-500/30 hover:bg-gray-500/30"
     }
@@ -124,6 +156,37 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
           )}
         </div>
 
+        {/* Category */}
+        <div className="relative">
+          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Category</label>
+          <button
+            onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+            className={`mt-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${getCategoryStyles(localCategory)}`}
+          >
+            {localCategory}
+          </button>
+
+          {/* Category Dropdown Menu */}
+          {showCategoryMenu && (
+            <div className="absolute top-full mt-2 bg-black border border-white/20 rounded-lg shadow-xl z-10 overflow-hidden">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => {
+                    setLocalCategory(category)
+                    setShowCategoryMenu(false)
+                  }}
+                  className={`w-full px-4 py-2 text-left transition-all ${getCategoryStyles(category)} ${
+                    localCategory === category ? 'font-semibold' : ''
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Node Name */}
         <div>
           <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Name</label>
@@ -158,15 +221,18 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
           </div>
         )}
 
-        {/* Weight (if available) */}
-        {node.weight !== undefined && (
-          <div>
-            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Weight</label>
-            <div className="mt-2 px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
-              <div className="text-xl font-semibold text-white">{node.weight}%</div>
-            </div>
+        {/* Normalized Weight Display */}
+        <div>
+          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Weight (Normalized)
+          </label>
+          <div className="mt-2 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg">
+            <div className="text-xl font-semibold text-white">{node.weight ?? rawWeight}%</div>
+            <p className="text-xs text-gray-400 mt-1">
+              {node.weight ? "Normalized among siblings" : "Will normalize on save"}
+            </p>
           </div>
-        )}
+        </div>
 
         {/* Importance Slider */}
         <div>

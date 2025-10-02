@@ -14,14 +14,18 @@ interface InteractiveTreeViewProps {
   viewMode?: "2d" | "3d"
   onAnalyze?: () => void
   analyzing?: boolean
+  cooldownSeconds?: number
 }
 
-export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false }: InteractiveTreeViewProps) {
+export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false, cooldownSeconds = 0 }: InteractiveTreeViewProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<TreeNodeData | null>(null)
   const [showDetailsPanel, setShowDetailsPanel] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [nodeToDelete, setNodeToDelete] = useState<{ id: string; name: string; path: number[] } | null>(null)
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [editingNode, setEditingNode] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
 
   const handleAddChild = (parentId: string) => {
     const newNode: TreeNodeData = {
@@ -238,26 +242,80 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
     }
   }
 
+  // Helper function to calculate normalized weights for siblings
+  const normalizeWeights = (nodes: (TreeNodeData | Factor)[]) => {
+    if (!nodes || nodes.length === 0) return
+
+    // Calculate raw weights from slider values
+    // High uncertainty and regret potential should decrease weight
+    const rawWeights = nodes.map(node => {
+      const importance = node.importance ?? 50
+      const emotionalWeight = node.emotionalWeight ?? 50
+      const uncertainty = node.uncertainty ?? 50
+      const regretPotential = node.regretPotential ?? 50
+      // Invert uncertainty and regret potential (100 - value)
+      return (importance + emotionalWeight + (100 - uncertainty) + (100 - regretPotential)) / 4
+    })
+
+    // Calculate total
+    const total = rawWeights.reduce((sum, w) => sum + w, 0)
+
+    // Normalize to 100%
+    if (total > 0) {
+      nodes.forEach((node, i) => {
+        node.weight = Math.round((rawWeights[i] / total) * 100)
+      })
+    }
+  }
+
   const handleUpdateNodeDetails = (nodeId: string, updates: Partial<TreeNodeData>) => {
     const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
 
-    const updateNodeRecursive = (nodes: TreeNodeData[]): boolean => {
-      for (const node of nodes) {
-        if (node.id === nodeId) {
-          Object.assign(node, updates)
-          return true
-        }
-        if (node.children && updateNodeRecursive(node.children)) {
-          return true
-        }
-      }
-      return false
-    }
+    // First check if the node is a factor itself
+    let factorUpdated = false
+    let parentSiblings: (TreeNodeData | Factor)[] | null = null
 
-    for (const factor of updatedFactors) {
-      if (factor.children && updateNodeRecursive(factor.children)) {
+    for (let i = 0; i < updatedFactors.length; i++) {
+      const factor = updatedFactors[i]
+      if (factor.id === nodeId) {
+        // Update the factor with the new values
+        Object.assign(factor, updates)
+        factorUpdated = true
+        parentSiblings = updatedFactors // All factors are siblings
         break
       }
+    }
+
+    // If not a factor, search in children
+    if (!factorUpdated) {
+      const updateNodeRecursive = (nodes: TreeNodeData[]): boolean => {
+        for (const node of nodes) {
+          if (node.id === nodeId) {
+            Object.assign(node, updates)
+            parentSiblings = nodes // Store siblings for normalization
+            return true
+          }
+          if (node.children && node.children.length > 0) {
+            if (updateNodeRecursive(node.children)) {
+              return true
+            }
+          }
+        }
+        return false
+      }
+
+      for (const factor of updatedFactors) {
+        if (factor.children && factor.children.length > 0) {
+          if (updateNodeRecursive(factor.children)) {
+            break
+          }
+        }
+      }
+    }
+
+    // Normalize weights among siblings
+    if (parentSiblings) {
+      normalizeWeights(parentSiblings)
     }
 
     onUpdate({ ...decision, factors: updatedFactors })
@@ -296,6 +354,7 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
         onDeleteNode={handleToolbarDeleteNode}
         onEditNode={handleToolbarEditNode}
         analyzing={analyzing}
+        cooldownSeconds={cooldownSeconds}
       />
 
       <div className="flex-1 overflow-hidden">

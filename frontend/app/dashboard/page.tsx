@@ -9,10 +9,12 @@ import { ActiveBranchesSidebar } from "@/components/active-branches-sidebar"
 import { InteractiveTreeView } from "@/components/interactive-tree-view"
 import { DecisionFormModal } from "@/components/decision-form-modal"
 import { DecisionAnalysisPanel } from "@/components/decision-analysis-panel"
+import { TemplateSelectionModal } from "@/components/template-selection-modal"
 import { BackgroundWaves } from "@/components/background-waves"
 import type { Decision } from "@/types/decision"
 import { useDecisions } from "@/hooks/useDecisions"
 import { useDecisionAnalysis } from "@/hooks/useDecisionAnalysis"
+import type { DecisionTemplate } from "@/lib/decision-templates"
 
 const emptyDecision: Decision = {
   id: "",
@@ -32,6 +34,7 @@ export default function Dashboard() {
   const router = useRouter()
   const [currentDecision, setCurrentDecision] = useState<Decision>(emptyDecision)
   const [formModalOpen, setFormModalOpen] = useState(false)
+  const [templateModalOpen, setTemplateModalOpen] = useState(false)
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
   const [activeTab, setActiveTab] = useState<"active" | "archived">("active")
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d")
@@ -40,7 +43,7 @@ export default function Dashboard() {
   const titleInputRef = useRef<HTMLInputElement>(null)
 
   const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision, createDecision } = useDecisions({ limit: 50, autoFetch: false })
-  const { analysis, loading: analyzing, error: analysisError, analyzeDecision } = useDecisionAnalysis()
+  const { analysis, loading: analyzing, error: analysisError, cooldownSeconds, analyzeDecision } = useDecisionAnalysis()
 
   // Authentication check and token setup
   useEffect(() => {
@@ -98,28 +101,32 @@ export default function Dashboard() {
     }
   }, [analysis, analyzing, analysisError])
 
-  const handleNewDecision = useCallback(async () => {
-    // Create a blank decision with one starter factor
-    const newDecision: Omit<Decision, 'id' | 'createdAt' | 'updatedAt'> = {
-      title: "Untitled Decision",
-      description: "",
-      factors: [
-        {
-          id: Date.now().toString(),
-          name: "First Factor",
-          weight: 50,
-          category: "personal",
-          description: "",
-          children: []
+  const handleNewDecision = useCallback(() => {
+    console.log('Opening template modal')
+    setTemplateModalOpen(true)
+  }, [])
+
+  const handleSelectTemplate = useCallback(async (template: DecisionTemplate) => {
+    setTemplateModalOpen(false)
+
+    // Generate unique IDs for the template
+    const generateUniqueIds = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj.map(item => generateUniqueIds(item))
+      } else if (obj && typeof obj === 'object') {
+        const newObj = { ...obj }
+        if (newObj.id) {
+          newObj.id = Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9)
         }
-      ],
-      status: "draft",
-      emotionalContext: {
-        initialStressLevel: 5,
-        confidenceLevel: 5,
-        urgencyRating: 5,
-      },
+        Object.keys(newObj).forEach(key => {
+          newObj[key] = generateUniqueIds(newObj[key])
+        })
+        return newObj
+      }
+      return obj
     }
+
+    const newDecision = generateUniqueIds(template.template) as Omit<Decision, 'id' | 'createdAt' | 'updatedAt'>
 
     // Create the decision in the backend first
     const created = await createDecision(newDecision)
@@ -158,6 +165,27 @@ export default function Dashboard() {
       refetchDecisions()
     }
   }, [updateDecision, refetchDecisions])
+
+  const handleDeleteDecision = useCallback(async (decisionId: string) => {
+    const success = await deleteDecision(decisionId)
+    if (success) {
+      if (currentDecision.id === decisionId) {
+        setCurrentDecision(emptyDecision)
+      }
+      refetchDecisions()
+    }
+  }, [deleteDecision, currentDecision.id, refetchDecisions])
+
+  const handleArchiveDecision = useCallback(async (decisionId: string) => {
+    const decisionToArchive = decisions.find(d => d.id === decisionId)
+    if (decisionToArchive) {
+      await updateDecision(decisionId, { ...decisionToArchive, status: 'resolved' })
+      if (currentDecision.id === decisionId) {
+        setCurrentDecision(emptyDecision)
+      }
+      refetchDecisions()
+    }
+  }, [updateDecision, decisions, currentDecision.id, refetchDecisions])
 
   const handleAnalyzeDecision = useCallback(async () => {
     if (!currentDecision.id) {
@@ -236,6 +264,8 @@ export default function Dashboard() {
           selectedDecisionId={currentDecision.id}
           onSelectDecision={handleSelectDecision}
           onCreateNew={handleNewDecision}
+          onDeleteDecision={handleDeleteDecision}
+          onArchiveDecision={handleArchiveDecision}
           loading={decisionsLoading}
         />
 
@@ -304,6 +334,7 @@ export default function Dashboard() {
                   viewMode={viewMode}
                   onAnalyze={handleAnalyzeDecision}
                   analyzing={analyzing}
+                  cooldownSeconds={cooldownSeconds}
                 />
               </div>
             </>
@@ -342,6 +373,12 @@ export default function Dashboard() {
           onClose={() => setShowAnalysisPanel(false)}
         />
       )}
+
+      <TemplateSelectionModal
+        isOpen={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
     </div>
   )
 }

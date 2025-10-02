@@ -17,6 +17,10 @@ const treeNodeSchema = new Schema<ITreeNodeData>({
     required: true,
     enum: ['outcome', 'consequence', 'option', 'consideration']
   },
+  category: {
+    type: String,
+    enum: ['financial', 'personal', 'career', 'health']
+  },
   weight: {
     type: Number,
     min: [0, 'Weight must be between 0 and 100'],
@@ -25,6 +29,33 @@ const treeNodeSchema = new Schema<ITreeNodeData>({
   description: {
     type: String,
     maxlength: [500, 'Description must be less than 500 characters']
+  },
+  importance: {
+    type: Number,
+    min: [0, 'Importance must be between 0 and 100'],
+    max: [100, 'Importance must be between 0 and 100']
+  },
+  emotionalWeight: {
+    type: Number,
+    min: [0, 'Emotional weight must be between 0 and 100'],
+    max: [100, 'Emotional weight must be between 0 and 100']
+  },
+  uncertainty: {
+    type: Number,
+    min: [0, 'Uncertainty must be between 0 and 100'],
+    max: [100, 'Uncertainty must be between 0 and 100']
+  },
+  regretPotential: {
+    type: Number,
+    min: [0, 'Regret potential must be between 0 and 100'],
+    max: [100, 'Regret potential must be between 0 and 100']
+  },
+  notes: {
+    type: String,
+    maxlength: [1000, 'Notes must be less than 1000 characters']
+  },
+  ccs: {
+    type: Number
   },
   children: {
     type: [Schema.Types.Mixed],
@@ -45,6 +76,10 @@ const factorSchema = new Schema<IFactor>({
     required: [true, 'Factor name is required'],
     maxlength: [100, 'Factor name must be less than 100 characters']
   },
+  type: {
+    type: String,
+    enum: ['outcome', 'consequence', 'option', 'consideration']
+  },
   weight: {
     type: Number,
     required: [true, 'Factor weight is required'],
@@ -59,6 +94,11 @@ const factorSchema = new Schema<IFactor>({
   description: {
     type: String,
     maxlength: [500, 'Description must be less than 500 characters']
+  },
+  importance: {
+    type: Number,
+    min: [0, 'Importance must be between 0 and 100'],
+    max: [100, 'Importance must be between 0 and 100']
   },
   uncertainty: {
     type: Number,

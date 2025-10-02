@@ -112,8 +112,9 @@ export function InteractiveTreeCanvas({
         node: {
           id: factor.id,
           name: factor.name,
-          type: 'consideration',
-          description: `${factor.category} • ${factor.weight}%`,
+          type: factor.type || 'consideration',
+          category: factor.category,
+          description: factor.description,
           weight: factor.weight
         },
         x: factorCenter,
@@ -370,18 +371,35 @@ export function InteractiveTreeCanvas({
                     : 'border-2 border-gray-300 hover:border-purple-400'
                 }`}
               >
-                <div
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-1 ${
-                    pNode.node.type === 'outcome'
-                      ? 'bg-blue-100 text-blue-800'
-                      : pNode.node.type === 'consequence'
-                      ? 'bg-purple-100 text-purple-800'
-                      : pNode.node.type === 'option'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-orange-100 text-orange-800'
-                  }`}
-                >
-                  {pNode.node.type}
+                <div className="flex gap-1 mb-1">
+                  <div
+                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                      pNode.node.type === 'outcome'
+                        ? 'bg-blue-100 text-blue-800'
+                        : pNode.node.type === 'consequence'
+                        ? 'bg-purple-100 text-purple-800'
+                        : pNode.node.type === 'option'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-orange-100 text-orange-800'
+                    }`}
+                  >
+                    {pNode.node.type}
+                  </div>
+                  {pNode.node.category && (
+                    <div
+                      className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        pNode.node.category === 'financial'
+                          ? 'bg-green-100 text-green-800'
+                          : pNode.node.category === 'personal'
+                          ? 'bg-blue-100 text-blue-800'
+                          : pNode.node.category === 'career'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {pNode.node.category}
+                    </div>
+                  )}
                 </div>
                 <h4 className="text-black font-bold text-sm line-clamp-2">
                   {pNode.node.name}
@@ -389,6 +407,11 @@ export function InteractiveTreeCanvas({
                 {pNode.node.description && (
                   <p className="text-gray-600 text-xs mt-1 line-clamp-2">
                     {pNode.node.description}
+                  </p>
+                )}
+                {pNode.node.weight !== undefined && (
+                  <p className="text-gray-500 text-xs mt-1 font-semibold">
+                    {pNode.node.weight}%
                   </p>
                 )}
               </div>
