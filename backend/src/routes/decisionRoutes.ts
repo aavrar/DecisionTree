@@ -18,7 +18,7 @@ router.post('/', validateDecision, handleValidationErrors, createDecision);
 router.get('/', getDecisions);
 router.get('/stats', getStats);
 router.get('/:id', getDecision);
-router.put('/:id', validateDecision, handleValidationErrors, updateDecision);
+router.put('/:id', updateDecision);
 router.delete('/:id', deleteDecision);
 
 export default router;

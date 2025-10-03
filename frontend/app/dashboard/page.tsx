@@ -177,15 +177,23 @@ export default function Dashboard() {
   }, [deleteDecision, currentDecision.id, refetchDecisions])
 
   const handleArchiveDecision = useCallback(async (decisionId: string) => {
-    const decisionToArchive = decisions.find(d => d.id === decisionId)
-    if (decisionToArchive) {
-      await updateDecision(decisionId, { ...decisionToArchive, status: 'resolved' })
-      if (currentDecision.id === decisionId) {
-        setCurrentDecision(emptyDecision)
-      }
-      refetchDecisions()
+    await updateDecision(decisionId, {
+      status: 'archived',
+      archivedAt: new Date()
+    })
+    if (currentDecision.id === decisionId) {
+      setCurrentDecision(emptyDecision)
     }
-  }, [updateDecision, decisions, currentDecision.id, refetchDecisions])
+    refetchDecisions()
+  }, [updateDecision, currentDecision.id, refetchDecisions])
+
+  const handleUnarchiveDecision = useCallback(async (decisionId: string) => {
+    await updateDecision(decisionId, {
+      status: 'active',
+      archivedAt: undefined
+    })
+    refetchDecisions()
+  }, [updateDecision, refetchDecisions])
 
   const handleAnalyzeDecision = useCallback(async () => {
     if (!currentDecision.id) {
@@ -200,7 +208,7 @@ export default function Dashboard() {
   }
 
   const handleArchivedView = () => {
-    setActiveTab("archived")
+    setActiveTab(activeTab === "active" ? "archived" : "active")
   }
 
   const handleStartEditTitle = () => {
@@ -266,7 +274,9 @@ export default function Dashboard() {
           onCreateNew={handleNewDecision}
           onDeleteDecision={handleDeleteDecision}
           onArchiveDecision={handleArchiveDecision}
+          onUnarchiveDecision={handleUnarchiveDecision}
           loading={decisionsLoading}
+          activeTab={activeTab}
         />
 
         {/* Main Content Area - Tree Builder Embedded */}

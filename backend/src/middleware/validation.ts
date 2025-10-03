@@ -32,8 +32,8 @@ export const validateDecision = [
   
   body('status')
     .optional()
-    .isIn(['draft', 'active', 'resolved'])
-    .withMessage('Status must be one of: draft, active, resolved')
+    .isIn(['draft', 'active', 'resolved', 'archived'])
+    .withMessage('Status must be one of: draft, active, resolved, archived')
 ];
 
 export const validateUser = [

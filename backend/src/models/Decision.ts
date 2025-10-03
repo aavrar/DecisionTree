@@ -162,8 +162,11 @@ const decisionSchema = new Schema<IDecision>(
     },
     status: {
       type: String,
-      enum: ['draft', 'active', 'resolved'],
+      enum: ['draft', 'active', 'resolved', 'archived'],
       default: 'draft'
+    },
+    archivedAt: {
+      type: Date
     },
     emotionalContext: {
       initialStressLevel: {

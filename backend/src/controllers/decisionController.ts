@@ -172,25 +172,29 @@ export const updateDecision = async (req: Request, res: Response): Promise<void>
     const { id } = req.params;
     const updateData = req.body;
 
-    if (updateData.factors) {
+    // Only process factors if they're being updated
+    if (updateData.factors && Array.isArray(updateData.factors)) {
       updateData.factors = updateData.factors.map((factor: any, index: number) => ({
         id: factor.id || Date.now().toString() + index,
         name: factor.name,
+        type: factor.type,
         weight: factor.weight,
         category: factor.category,
         description: factor.description,
+        address: factor.address,
+        importance: factor.importance,
         uncertainty: factor.uncertainty,
         timeHorizon: factor.timeHorizon,
         emotionalWeight: factor.emotionalWeight,
         regretPotential: factor.regretPotential,
-        children: factor.children || [] // Include nested children
+        children: factor.children || []
       }));
     }
 
     const decision = await Decision.findOneAndUpdate(
       { _id: id, userId: req.user.userId },
-      updateData,
-      { new: true, runValidators: true }
+      { $set: updateData },
+      { new: true, runValidators: false }
     );
 
     if (!decision) {
@@ -211,11 +215,12 @@ export const updateDecision = async (req: Request, res: Response): Promise<void>
       message: 'Decision updated successfully',
       data: { decision: decisionWithId }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update decision error:', error);
+    console.error('Update data:', JSON.stringify(req.body, null, 2));
     res.status(500).json({
       success: false,
-      message: 'Failed to update decision',
+      message: error.message || 'Failed to update decision',
       error: process.env.NODE_ENV === 'development' ? error : undefined
     });
   }

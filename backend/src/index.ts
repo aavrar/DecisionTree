@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes';
 import decisionRoutes from './routes/decisionRoutes';
 import analysisRoutes from './routes/analysisRoutes';
 import locationRoutes from './routes/locationRoutes';
+import { cleanupService } from './services/cleanupService';
 
 dotenv.config();
 
@@ -76,18 +77,22 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 const startServer = async () => {
   try {
     await connectDatabase();
-    
+
+    // Start cleanup service for archived decisions
+    cleanupService.start();
+
     app.listen(PORT, () => {
       console.log(`
-🚀 DecisionTree Backend Server Started
-📍 Port: ${PORT}
-🌍 Environment: ${process.env.NODE_ENV || 'development'}
-🔗 Health Check: http://localhost:${PORT}/api/health
-📋 API Base: http://localhost:${PORT}/api
+DecisionTree Backend Server Started
+Port: ${PORT}
+Environment: ${process.env.NODE_ENV || 'development'}
+Health Check: http://localhost:${PORT}/api/health
+API Base: http://localhost:${PORT}/api
+Cleanup Service: Active (7-day auto-delete for archived decisions)
       `);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
@@ -99,6 +104,18 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (error) => {
   console.log('Uncaught Exception thrown:', error);
   process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  cleanupService.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  cleanupService.stop();
+  process.exit(0);
 });
 
 startServer();

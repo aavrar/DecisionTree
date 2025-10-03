@@ -12,7 +12,9 @@ interface ActiveBranchesSidebarProps {
   onCreateNew: () => void
   onDeleteDecision?: (decisionId: string) => void
   onArchiveDecision?: (decisionId: string) => void
+  onUnarchiveDecision?: (decisionId: string) => void
   loading?: boolean
+  activeTab: "active" | "archived"
 }
 
 export function ActiveBranchesSidebar({
@@ -22,17 +24,42 @@ export function ActiveBranchesSidebar({
   onCreateNew,
   onDeleteDecision,
   onArchiveDecision,
-  loading
+  onUnarchiveDecision,
+  loading,
+  activeTab
 }: ActiveBranchesSidebarProps) {
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null)
-  const activeBranches = decisions.filter(d => d.status !== "archived")
+
+  const activeBranches = activeTab === "active"
+    ? decisions.filter(d => d.status !== "archived")
+    : decisions.filter(d => d.status === "archived")
+
+  const getTimeUntilDeletion = (archivedAt: Date | undefined) => {
+    if (!archivedAt) return null
+    const now = new Date()
+    const archived = new Date(archivedAt)
+    const deletionDate = new Date(archived.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const diff = deletionDate.getTime() - now.getTime()
+
+    if (diff <= 0) return "Deleting..."
+
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+
+    if (days > 0) return `${days}d`
+    return `${hours}h`
+  }
 
   return (
     <aside className="w-80 bg-black border-r border-white/10 flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-white/10">
-        <h2 className="text-lg font-semibold text-white mb-2">ACTIVE BRANCHES</h2>
-        <p className="text-xs text-gray-500">{activeBranches.length} active decision{activeBranches.length !== 1 ? 's' : ''}</p>
+        <h2 className="text-lg font-semibold text-white mb-2">
+          {activeTab === "active" ? "ACTIVE BRANCHES" : "ARCHIVED BRANCHES"}
+        </h2>
+        <p className="text-xs text-gray-500">
+          {activeBranches.length} {activeTab === "active" ? "active" : "archived"} decision{activeBranches.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {/* Branches List */}
@@ -75,9 +102,10 @@ export function ActiveBranchesSidebar({
                       <span className={`px-2 py-0.5 rounded ${
                         decision.status === "draft" ? "bg-yellow-500/20 text-yellow-400" :
                         decision.status === "active" ? "bg-green-500/20 text-green-400" :
+                        decision.status === "archived" ? "bg-red-500/20 text-red-400" :
                         "bg-gray-500/20 text-gray-400"
                       }`}>
-                        {decision.status}
+                        {decision.status === "archived" ? getTimeUntilDeletion(decision.archivedAt) : decision.status}
                       </span>
                     </div>
                   </div>
@@ -96,7 +124,7 @@ export function ActiveBranchesSidebar({
               {/* Dropdown Menu */}
               {menuOpenFor === decision.id && (
                 <div className="absolute right-2 top-12 z-20 bg-black border border-white/20 rounded-lg shadow-xl overflow-hidden min-w-[150px]">
-                  {onArchiveDecision && (
+                  {activeTab === "active" && onArchiveDecision && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -107,6 +135,19 @@ export function ActiveBranchesSidebar({
                     >
                       <Archive className="w-4 h-4" />
                       Archive
+                    </button>
+                  )}
+                  {activeTab === "archived" && onUnarchiveDecision && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUnarchiveDecision(decision.id)
+                        setMenuOpenFor(null)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-green-400 hover:bg-green-500/10 transition-colors flex items-center gap-2"
+                    >
+                      <Archive className="w-4 h-4" />
+                      Unarchive
                     </button>
                   )}
                   {onDeleteDecision && (

@@ -39,7 +39,8 @@ export interface IDecision extends Document {
   title: string;
   description: string;
   factors: IFactor[];
-  status: 'draft' | 'active' | 'resolved';
+  status: 'draft' | 'active' | 'resolved' | 'archived';
+  archivedAt?: Date;
   emotionalContext: {
     initialStressLevel: number;
     confidenceLevel: number;

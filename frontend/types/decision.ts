@@ -5,7 +5,8 @@ export interface Decision {
   title: string
   description: string
   factors: Factor[]
-  status: "draft" | "active" | "resolved"
+  status: "draft" | "active" | "resolved" | "archived"
+  archivedAt?: Date
   userId?: string
   createdAt?: Date
   updatedAt?: Date

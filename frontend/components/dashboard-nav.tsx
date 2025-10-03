@@ -35,16 +35,24 @@ export function DashboardNav({ username, onNewDecision, onArchived, onLogout, ac
             NEW DECISION
           </Button>
 
-          <Button
-            onClick={onArchived}
-            variant="ghost"
-            className={`text-white font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/10 ${
-              activeTab === "archived" ? "bg-white/10" : ""
-            }`}
-          >
-            <Archive className="w-4 h-4 mr-2" />
-            ARCHIVED
-          </Button>
+          {activeTab === "active" ? (
+            <Button
+              onClick={onArchived}
+              variant="ghost"
+              className="text-white font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/10"
+            >
+              <Archive className="w-4 h-4 mr-2" />
+              ARCHIVED
+            </Button>
+          ) : (
+            <Button
+              onClick={onArchived}
+              variant="ghost"
+              className="bg-white/10 text-white font-medium px-4 py-2 rounded-lg transition-all hover:bg-white/20"
+            >
+              ACTIVE BRANCHES
+            </Button>
+          )}
         </div>
 
         {/* Right side - Logout */}
