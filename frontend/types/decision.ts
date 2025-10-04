@@ -5,8 +5,9 @@ export interface Decision {
   title: string
   description: string
   factors: Factor[]
-  status: "draft" | "active" | "resolved" | "archived"
+  status: "draft" | "active" | "resolved" | "archived" | "complete"
   archivedAt?: Date
+  completedAt?: Date
   userId?: string
   createdAt?: Date
   updatedAt?: Date
@@ -37,6 +38,7 @@ export interface Factor {
   timeHorizon?: "immediate" | "short" | "medium" | "long"
   emotionalWeight?: number // 0-100
   regretPotential?: number // 0-100
+  selection?: "yes" | "no" | "pending"
   children?: TreeNodeData[]
 }
 
@@ -56,6 +58,7 @@ export interface TreeNodeData {
   emotionalWeight?: number // 0-100 - Emotional impact of this node
   uncertainty?: number // 0-100 - How uncertain is this outcome
   regretPotential?: number // 0-100 - Potential for future regret
+  selection?: "yes" | "no" | "pending"
 }
 
 export interface DecisionStats {

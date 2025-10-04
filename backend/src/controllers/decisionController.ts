@@ -28,6 +28,7 @@ export const createDecision = async (req: Request, res: Response): Promise<void>
         timeHorizon: factor.timeHorizon,
         emotionalWeight: factor.emotionalWeight,
         regretPotential: factor.regretPotential,
+        selection: factor.selection,
         children: factor.children || [] // Include nested children
       })),
       status
@@ -187,6 +188,7 @@ export const updateDecision = async (req: Request, res: Response): Promise<void>
         timeHorizon: factor.timeHorizon,
         emotionalWeight: factor.emotionalWeight,
         regretPotential: factor.regretPotential,
+        selection: factor.selection,
         children: factor.children || []
       }));
     }
@@ -261,6 +263,88 @@ export const deleteDecision = async (req: Request, res: Response): Promise<void>
   }
 };
 
+export const duplicateDecision = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const originalDecision = await Decision.findOne({ _id: id, userId: req.user.userId });
+
+    if (!originalDecision) {
+      res.status(404).json({
+        success: false,
+        message: 'Decision not found'
+      });
+      return;
+    }
+
+    // Helper function to generate unique IDs recursively
+    const generateUniqueIds = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj.map(item => generateUniqueIds(item));
+      } else if (obj && typeof obj === 'object') {
+        const newObj = { ...obj };
+        if (newObj.id) {
+          newObj.id = Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9);
+        }
+        // Reset selection to pending
+        if (newObj.selection) {
+          newObj.selection = 'pending';
+        }
+        Object.keys(newObj).forEach(key => {
+          if (key !== '_id' && key !== 'createdAt' && key !== 'updatedAt') {
+            newObj[key] = generateUniqueIds(newObj[key]);
+          }
+        });
+        return newObj;
+      }
+      return obj;
+    };
+
+    // Convert to plain object and generate new IDs
+    const originalObj = originalDecision.toObject();
+    const duplicatedFactors = generateUniqueIds(originalObj.factors);
+
+    // Create new decision with duplicated data
+    const duplicatedDecision = new Decision({
+      userId: req.user.userId,
+      title: `${originalObj.title} (Copy)`,
+      description: originalObj.description,
+      factors: duplicatedFactors,
+      status: 'draft', // Reset to draft
+      emotionalContext: originalObj.emotionalContext,
+      visualPreferences: originalObj.visualPreferences,
+      locationData: originalObj.locationData
+    });
+
+    await duplicatedDecision.save();
+
+    const decisionWithId = {
+      ...duplicatedDecision.toObject(),
+      id: (duplicatedDecision._id as any).toString()
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'Decision duplicated successfully',
+      data: { decision: decisionWithId }
+    });
+  } catch (error) {
+    console.error('Duplicate decision error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to duplicate decision',
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
+  }
+};
+
 export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -280,17 +364,17 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
       Decision.countDocuments({ userId }),
       Decision.countDocuments({ userId, status: 'active' }),
       Decision.countDocuments({ userId, createdAt: { $gte: thisMonth } }),
-      Decision.countDocuments({ 
-        userId, 
-        createdAt: { 
-          $gte: lastMonth, 
-          $lt: thisMonth 
-        } 
+      Decision.countDocuments({
+        userId,
+        createdAt: {
+          $gte: lastMonth,
+          $lt: thisMonth
+        }
       })
     ]);
 
     const resolvedDecisions = await Decision.find({ userId, status: 'resolved' });
-    const avgSatisfaction = resolvedDecisions.length > 0 
+    const avgSatisfaction = resolvedDecisions.length > 0
       ? resolvedDecisions.reduce((sum, decision) => sum + (decision as any).calculateFactorScore(), 0) / resolvedDecisions.length
       : 0;
 

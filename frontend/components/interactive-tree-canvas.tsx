@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import { ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from "@/components/ui/context-menu"
 import type { Decision, TreeNodeData } from "@/types/decision"
 
 interface InteractiveTreeCanvasProps {
@@ -10,6 +11,9 @@ interface InteractiveTreeCanvasProps {
   selectedNodeId: string | null
   onNodeClick: (node: TreeNodeData) => void
   onNodeDoubleClick: (node: TreeNodeData) => void
+  onAddChild?: (nodeId: string) => void
+  onDeleteNode?: (nodeId: string) => void
+  isReadOnly?: boolean
 }
 
 interface PositionedNode {
@@ -24,6 +28,9 @@ export function InteractiveTreeCanvas({
   selectedNodeId,
   onNodeClick,
   onNodeDoubleClick,
+  onAddChild,
+  onDeleteNode,
+  isReadOnly = false,
 }: InteractiveTreeCanvasProps) {
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -115,7 +122,8 @@ export function InteractiveTreeCanvas({
           type: factor.type || 'consideration',
           category: factor.category,
           description: factor.description,
-          weight: factor.weight
+          weight: factor.weight,
+          selection: factor.selection
         },
         x: factorCenter,
         y: factorY,
@@ -345,27 +353,38 @@ export function InteractiveTreeCanvas({
         {/* Nodes */}
         {positionedNodes.map((pNode) => {
           const isSelected = selectedNodeId === pNode.node.id
+          const selection = pNode.node.selection
+
+          // Determine background color based on selection
+          let bgColor = 'bg-white'
+          if (selection === 'yes') {
+            bgColor = 'bg-green-100'
+          } else if (selection === 'no') {
+            bgColor = 'bg-red-100'
+          }
+
           return (
-            <div
-              key={pNode.node.id}
-              className="absolute cursor-pointer"
-              style={{
-                left: `${pNode.x}px`,
-                top: `${pNode.y}px`,
-                width: '240px',
-                zIndex: isSelected ? 20 : 10
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                onNodeClick(pNode.node)
-              }}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-                onNodeDoubleClick(pNode.node)
-              }}
-            >
+            <ContextMenu key={pNode.node.id}>
+              <ContextMenuTrigger asChild>
+                <div
+                  className="absolute cursor-pointer"
+                  style={{
+                    left: `${pNode.x}px`,
+                    top: `${pNode.y}px`,
+                    width: '240px',
+                    zIndex: isSelected ? 20 : 10
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onNodeClick(pNode.node)
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    onNodeDoubleClick(pNode.node)
+                  }}
+                >
               <div
-                className={`bg-white rounded-lg p-3 shadow-lg hover:shadow-xl transition-all ${
+                className={`${bgColor} rounded-lg p-3 shadow-lg hover:shadow-xl transition-all ${
                   isSelected
                     ? 'border-2 border-purple-500 shadow-purple-500/40 scale-105'
                     : 'border-2 border-gray-300 hover:border-purple-400'
@@ -416,6 +435,31 @@ export function InteractiveTreeCanvas({
                 )}
               </div>
             </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent className="bg-black border border-white/20">
+            {!isReadOnly && onAddChild && (
+              <ContextMenuItem onClick={() => onAddChild(pNode.node.id)} className="text-white hover:bg-white/10">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Child Node
+              </ContextMenuItem>
+            )}
+            <ContextMenuItem onClick={() => {
+              navigator.clipboard.writeText(pNode.node.name)
+            }} className="text-white hover:bg-white/10">
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Name
+            </ContextMenuItem>
+            {!isReadOnly && onDeleteNode && (
+              <>
+                <ContextMenuSeparator className="bg-white/10" />
+                <ContextMenuItem onClick={() => onDeleteNode(pNode.node.id)} variant="destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Node
+                </ContextMenuItem>
+              </>
+            )}
+          </ContextMenuContent>
+        </ContextMenu>
           )
         })}
       </div>

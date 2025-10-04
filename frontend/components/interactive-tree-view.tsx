@@ -15,9 +15,11 @@ interface InteractiveTreeViewProps {
   onAnalyze?: () => void
   analyzing?: boolean
   cooldownSeconds?: number
+  onMarkActive?: () => void
+  onMarkComplete?: () => void
 }
 
-export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false, cooldownSeconds = 0 }: InteractiveTreeViewProps) {
+export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false, cooldownSeconds = 0, onMarkActive, onMarkComplete }: InteractiveTreeViewProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<TreeNodeData | null>(null)
   const [showDetailsPanel, setShowDetailsPanel] = useState(false)
@@ -43,6 +45,62 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
       factor.children = [...(factor.children || []), newNode]
       onUpdate({ ...decision, factors: updatedFactors })
       setExpandedNodes(new Set([...expandedNodes, parentId]))
+    }
+  }
+
+  const handleAddChildToAnyNode = (parentId: string) => {
+    const newNode: TreeNodeData = {
+      id: Date.now().toString(),
+      name: "New Node",
+      type: "outcome",
+      description: "",
+      children: []
+    }
+
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    const findAndAddChild = (nodes: TreeNodeData[]): boolean => {
+      for (const node of nodes) {
+        if (node.id === parentId) {
+          node.children = [...(node.children || []), newNode]
+          return true
+        }
+        if (node.children && findAndAddChild(node.children)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    if (findAndAddChild(updatedFactors)) {
+      onUpdate({ ...decision, factors: updatedFactors })
+      setExpandedNodes(new Set([...expandedNodes, parentId]))
+    }
+  }
+
+  const handleDeleteAnyNode = (nodeId: string) => {
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    const findAndDelete = (nodes: TreeNodeData[], parentNodes?: TreeNodeData[]): boolean => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === nodeId) {
+          nodes.splice(i, 1)
+          return true
+        }
+        if (nodes[i].children && findAndDelete(nodes[i].children, nodes)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    if (findAndDelete(updatedFactors)) {
+      onUpdate({ ...decision, factors: updatedFactors })
+      if (selectedNodeId === nodeId) {
+        setSelectedNodeId(null)
+        setSelectedNode(null)
+        setShowDetailsPanel(false)
+      }
     }
   }
 
@@ -313,6 +371,15 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
       }
     }
 
+    // If selection was set to "yes", set all siblings to "no"
+    if (updates.selection === "yes" && parentSiblings) {
+      parentSiblings.forEach((sibling) => {
+        if (sibling.id !== nodeId) {
+          sibling.selection = "no"
+        }
+      })
+    }
+
     // Normalize weights among siblings
     if (parentSiblings) {
       normalizeWeights(parentSiblings)
@@ -349,10 +416,13 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
       {/* Action Bar */}
       <TreeActionBar
         selectedNodeId={selectedNodeId}
+        decisionStatus={decision.status}
         onAnalyze={() => onAnalyze?.()}
         onAddNode={handleToolbarAddNode}
         onDeleteNode={handleToolbarDeleteNode}
         onEditNode={handleToolbarEditNode}
+        onMarkActive={onMarkActive}
+        onMarkComplete={onMarkComplete}
         analyzing={analyzing}
         cooldownSeconds={cooldownSeconds}
       />
@@ -364,6 +434,9 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
           selectedNodeId={selectedNodeId}
           onNodeClick={handleNodeClick}
           onNodeDoubleClick={handleCanvasNodeDoubleClick}
+          onAddChild={handleAddChildToAnyNode}
+          onDeleteNode={handleDeleteAnyNode}
+          isReadOnly={decision.status === "complete"}
         />
       </div>
 
@@ -371,6 +444,7 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
       {showDetailsPanel && selectedNode && (
         <NodeDetailsPanel
           node={selectedNode}
+          decisionStatus={decision.status}
           onClose={() => {
             setShowDetailsPanel(false)
             setSelectedNodeId(null)

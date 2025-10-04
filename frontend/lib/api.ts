@@ -156,6 +156,12 @@ export const api = {
       })
     },
 
+    async duplicate(id: string): Promise<{ success: boolean; data: { decision: Decision } }> {
+      return fetchWithAuth(`/api/decisions/${id}/duplicate`, {
+        method: 'POST',
+      })
+    },
+
     async getStats(): Promise<{ success: boolean; data: { stats: DecisionStats } }> {
       return fetchWithAuth('/api/decisions/stats')
     },

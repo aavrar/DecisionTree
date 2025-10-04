@@ -53,6 +53,10 @@ const treeNodeSchema = new Schema<ITreeNodeData>({
     min: [0, 'Regret potential must be between 0 and 100'],
     max: [100, 'Regret potential must be between 0 and 100']
   },
+  selection: {
+    type: String,
+    enum: ['yes', 'no', 'pending']
+  },
   notes: {
     type: String,
     maxlength: [1000, 'Notes must be less than 1000 characters']
@@ -129,6 +133,10 @@ const factorSchema = new Schema<IFactor>({
     max: [100, 'Regret potential must be between 0 and 100'],
     default: 50
   },
+  selection: {
+    type: String,
+    enum: ['yes', 'no', 'pending']
+  },
   children: {
     type: [treeNodeSchema],
     default: []
@@ -162,10 +170,13 @@ const decisionSchema = new Schema<IDecision>(
     },
     status: {
       type: String,
-      enum: ['draft', 'active', 'resolved', 'archived'],
+      enum: ['draft', 'active', 'resolved', 'archived', 'complete'],
       default: 'draft'
     },
     archivedAt: {
+      type: Date
+    },
+    completedAt: {
       type: Date
     },
     emotionalContext: {

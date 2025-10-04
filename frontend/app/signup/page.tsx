@@ -80,6 +80,7 @@ export default function SignupPage() {
       <nav className="relative z-10 p-6">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="Branches Logo" className="w-8 h-8" />
             <span className="text-2xl font-bold text-white tracking-wide">BRANCHES</span>
           </div>
           <Button

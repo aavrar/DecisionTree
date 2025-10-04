@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   title: 'Branches - Make Better Decisions',
   description: 'Transform complex choices into clear paths with decision trees, future self reflection, and psychology-informed guidance.',
   generator: 'Branches',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/logo.svg',
+  },
 }
 
 export default function RootLayout({

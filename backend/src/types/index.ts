@@ -13,6 +13,7 @@ export interface ITreeNodeData {
   emotionalWeight?: number; // 0-100
   uncertainty?: number; // 0-100
   regretPotential?: number; // 0-100
+  selection?: 'yes' | 'no' | 'pending';
   notes?: string;
   ccs?: number; // Choice Consequence Score
   children?: ITreeNodeData[];
@@ -31,6 +32,7 @@ export interface IFactor {
   timeHorizon?: 'immediate' | 'short' | 'medium' | 'long';
   emotionalWeight?: number; // 0-100
   regretPotential?: number; // 0-100
+  selection?: 'yes' | 'no' | 'pending';
   children?: ITreeNodeData[]; // Support nested tree structure
 }
 
@@ -39,8 +41,9 @@ export interface IDecision extends Document {
   title: string;
   description: string;
   factors: IFactor[];
-  status: 'draft' | 'active' | 'resolved' | 'archived';
+  status: 'draft' | 'active' | 'resolved' | 'archived' | 'complete';
   archivedAt?: Date;
+  completedAt?: Date;
   emotionalContext: {
     initialStressLevel: number;
     confidenceLevel: number;

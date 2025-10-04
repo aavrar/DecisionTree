@@ -10,7 +10,9 @@ import { InteractiveTreeView } from "@/components/interactive-tree-view"
 import { DecisionFormModal } from "@/components/decision-form-modal"
 import { DecisionAnalysisPanel } from "@/components/decision-analysis-panel"
 import { TemplateSelectionModal } from "@/components/template-selection-modal"
+import { HelpModal } from "@/components/help-modal"
 import { BackgroundWaves } from "@/components/background-waves"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Decision } from "@/types/decision"
 import { useDecisions } from "@/hooks/useDecisions"
 import { useDecisionAnalysis } from "@/hooks/useDecisionAnalysis"
@@ -35,6 +37,7 @@ export default function Dashboard() {
   const [currentDecision, setCurrentDecision] = useState<Decision>(emptyDecision)
   const [formModalOpen, setFormModalOpen] = useState(false)
   const [templateModalOpen, setTemplateModalOpen] = useState(false)
+  const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
   const [activeTab, setActiveTab] = useState<"active" | "archived">("active")
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d")
@@ -42,7 +45,7 @@ export default function Dashboard() {
   const [editedTitle, setEditedTitle] = useState("")
   const titleInputRef = useRef<HTMLInputElement>(null)
 
-  const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision, createDecision } = useDecisions({ limit: 50, autoFetch: false })
+  const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision, createDecision, duplicateDecision } = useDecisions({ limit: 50, autoFetch: false })
   const { analysis, loading: analyzing, error: analysisError, cooldownSeconds, analyzeDecision } = useDecisionAnalysis()
 
   // Authentication check and token setup
@@ -195,6 +198,36 @@ export default function Dashboard() {
     refetchDecisions()
   }, [updateDecision, refetchDecisions])
 
+  const handleDuplicateDecision = useCallback(async (decisionId: string) => {
+    const duplicated = await duplicateDecision(decisionId)
+    if (duplicated) {
+      setCurrentDecision(duplicated)
+      refetchDecisions()
+    }
+  }, [duplicateDecision, refetchDecisions])
+
+  const handleMarkActive = useCallback(async () => {
+    if (!currentDecision.id) {
+      alert("Please save the decision first")
+      return
+    }
+    const updated = { ...currentDecision, status: 'active' as const }
+    await updateDecision(currentDecision.id, { status: 'active' })
+    setCurrentDecision(updated)
+    refetchDecisions()
+  }, [currentDecision, updateDecision, refetchDecisions])
+
+  const handleMarkComplete = useCallback(async () => {
+    if (!currentDecision.id) {
+      alert("Please save the decision first")
+      return
+    }
+    const updated = { ...currentDecision, status: 'complete' as const, completedAt: new Date() }
+    await updateDecision(currentDecision.id, { status: 'complete', completedAt: new Date() })
+    setCurrentDecision(updated)
+    refetchDecisions()
+  }, [currentDecision, updateDecision, refetchDecisions])
+
   const handleAnalyzeDecision = useCallback(async () => {
     if (!currentDecision.id) {
       alert("Please save the decision first")
@@ -205,6 +238,10 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/signup" })
+  }
+
+  const handleHelp = () => {
+    setHelpModalOpen(true)
   }
 
   const handleArchivedView = () => {
@@ -238,9 +275,14 @@ export default function Dashboard() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading...</p>
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-12 w-full bg-white/10" />
+          <Skeleton className="h-32 w-full bg-white/10" />
+          <Skeleton className="h-24 w-full bg-white/10" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-1/2 bg-white/10" />
+            <Skeleton className="h-10 w-1/2 bg-white/10" />
+          </div>
         </div>
       </div>
     )
@@ -260,6 +302,7 @@ export default function Dashboard() {
         username={session?.user?.name || undefined}
         onNewDecision={handleNewDecision}
         onArchived={handleArchivedView}
+        onHelp={handleHelp}
         onLogout={handleLogout}
         activeTab={activeTab}
       />
@@ -275,6 +318,7 @@ export default function Dashboard() {
           onDeleteDecision={handleDeleteDecision}
           onArchiveDecision={handleArchiveDecision}
           onUnarchiveDecision={handleUnarchiveDecision}
+          onDuplicateDecision={handleDuplicateDecision}
           loading={decisionsLoading}
           activeTab={activeTab}
         />
@@ -345,6 +389,8 @@ export default function Dashboard() {
                   onAnalyze={handleAnalyzeDecision}
                   analyzing={analyzing}
                   cooldownSeconds={cooldownSeconds}
+                  onMarkActive={handleMarkActive}
+                  onMarkComplete={handleMarkComplete}
                 />
               </div>
             </>
@@ -388,6 +434,11 @@ export default function Dashboard() {
         isOpen={templateModalOpen}
         onClose={() => setTemplateModalOpen(false)}
         onSelectTemplate={handleSelectTemplate}
+      />
+
+      <HelpModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
       />
     </div>
   )

@@ -1,26 +1,29 @@
 "use client"
 
-import { X, MapPin } from "lucide-react"
+import { X, MapPin, ThumbsUp, ThumbsDown, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import type { TreeNodeData } from "@/types/decision"
 import { useState, useEffect } from "react"
 
 interface NodeDetailsPanelProps {
   node: TreeNodeData | null
+  decisionStatus: "draft" | "active" | "resolved" | "archived" | "complete"
   onClose: () => void
   onUpdate: (nodeId: string, updates: Partial<TreeNodeData>) => void
 }
 
-export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelProps) {
+export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: NodeDetailsPanelProps) {
   const [localName, setLocalName] = useState("")
   const [localDescription, setLocalDescription] = useState("")
   const [localNotes, setLocalNotes] = useState("")
   const [localAddress, setLocalAddress] = useState("")
   const [localType, setLocalType] = useState<"outcome" | "consequence" | "option" | "consideration">("outcome")
   const [localCategory, setLocalCategory] = useState<"financial" | "personal" | "career" | "health">("personal")
+  const [localSelection, setLocalSelection] = useState<"yes" | "no" | "pending">("pending")
   const [showTypeMenu, setShowTypeMenu] = useState(false)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [importance, setImportance] = useState(50)
@@ -36,14 +39,18 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       setLocalAddress(node.address || "")
       setLocalType(node.type)
       setLocalCategory(node.category || "personal")
+      setLocalSelection(node.selection || "pending")
       setImportance(node.importance ?? 50)
       setEmotionalWeight(node.emotionalWeight ?? 50)
       setUncertainty(node.uncertainty ?? 50)
       setRegretPotential(node.regretPotential ?? 50)
     }
-  }, [node.id])
+  }, [node?.id])
 
   if (!node) return null
+
+  const isReadOnly = decisionStatus === "complete"
+  const isActive = decisionStatus === "active"
 
   const handleSave = () => {
     onUpdate(node.id, {
@@ -57,12 +64,18 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
       emotionalWeight,
       uncertainty,
       regretPotential,
+      selection: localSelection,
     })
     onClose()
   }
 
-  // Calculate raw weight from slider values (will be normalized by parent)
-  // High uncertainty and regret potential decrease weight
+  const handleSelection = (selection: "yes" | "no") => {
+    setLocalSelection(selection)
+    onUpdate(node.id, {
+      selection
+    })
+  }
+
   const rawWeight = Math.round((importance + emotionalWeight + (100 - uncertainty) + (100 - regretPotential)) / 4)
 
   const nodeTypes: Array<"outcome" | "consequence" | "option" | "consideration"> = [
@@ -113,7 +126,9 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
     <div className="fixed inset-y-0 right-0 w-96 bg-black border-l border-white/20 z-50 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h2 className="text-lg font-semibold text-white">Node Details</h2>
+        <h2 className="text-lg font-semibold text-white">
+          {isReadOnly ? "Node Details (Read-Only)" : isActive ? "Branch Selection" : "Node Details"}
+        </h2>
         <Button
           onClick={onClose}
           variant="ghost"
@@ -126,18 +141,58 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Active Decision: Selection Buttons */}
+        {isActive && (
+          <div className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-white/20 rounded-lg p-4">
+            <label className="text-sm font-medium text-white mb-3 block">
+              Do you want to go down this branch?
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => handleSelection("yes")}
+                className={`flex items-center justify-center gap-2 font-semibold transition-all ${
+                  localSelection === "yes"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
+                }`}
+              >
+                <ThumbsUp className="w-4 h-4" />
+                Yes
+              </Button>
+              <Button
+                onClick={() => handleSelection("no")}
+                className={`flex items-center justify-center gap-2 font-semibold transition-all ${
+                  localSelection === "no"
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
+                }`}
+              >
+                <ThumbsDown className="w-4 h-4" />
+                No
+              </Button>
+            </div>
+            {localSelection === "pending" && (
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                No selection made yet
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Node Type */}
         <div className="relative">
           <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Type</label>
           <button
-            onClick={() => setShowTypeMenu(!showTypeMenu)}
-            className={`mt-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${getTypeStyles(localType)}`}
+            onClick={() => !isReadOnly && setShowTypeMenu(!showTypeMenu)}
+            disabled={isReadOnly}
+            className={`mt-2 px-3 py-2 rounded-lg border transition-all ${
+              isReadOnly ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+            } ${getTypeStyles(localType)}`}
           >
             {localType}
           </button>
 
-          {/* Type Dropdown Menu */}
-          {showTypeMenu && (
+          {showTypeMenu && !isReadOnly && (
             <div className="absolute top-full mt-2 bg-black border border-white/20 rounded-lg shadow-xl z-10 overflow-hidden">
               {nodeTypes.map((type) => (
                 <button
@@ -161,14 +216,16 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
         <div className="relative">
           <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Category</label>
           <button
-            onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-            className={`mt-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${getCategoryStyles(localCategory)}`}
+            onClick={() => !isReadOnly && setShowCategoryMenu(!showCategoryMenu)}
+            disabled={isReadOnly}
+            className={`mt-2 px-3 py-2 rounded-lg border transition-all ${
+              isReadOnly ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+            } ${getCategoryStyles(localCategory)}`}
           >
             {localCategory}
           </button>
 
-          {/* Category Dropdown Menu */}
-          {showCategoryMenu && (
+          {showCategoryMenu && !isReadOnly && (
             <div className="absolute top-full mt-2 bg-black border border-white/20 rounded-lg shadow-xl z-10 overflow-hidden">
               {categories.map((category) => (
                 <button
@@ -194,7 +251,8 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
           <Input
             value={localName}
             onChange={(e) => setLocalName(e.target.value)}
-            className="mt-2 bg-white/5 border-white/20 text-white"
+            disabled={isReadOnly || isActive}
+            className="mt-2 bg-white/5 border-white/20 text-white disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder="Enter node name"
           />
         </div>
@@ -205,120 +263,32 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
           <Textarea
             value={localDescription}
             onChange={(e) => setLocalDescription(e.target.value)}
-            className="mt-2 bg-white/5 border-white/20 text-white min-h-[100px]"
+            disabled={isReadOnly || isActive}
+            className="mt-2 bg-white/5 border-white/20 text-white min-h-[100px] disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder="Enter description"
           />
         </div>
 
-        {/* Address */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-blue-400" />
-            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location Address</label>
-          </div>
-          <Input
-            value={localAddress}
-            onChange={(e) => setLocalAddress(e.target.value)}
-            className="bg-white/5 border-white/20 text-white"
-            placeholder="e.g., 1 Infinite Loop, Cupertino, CA"
-          />
-          <p className="text-xs text-gray-500 mt-2">Optional: Add an address for AI to consider during analysis</p>
-        </div>
-
-        {/* CCS Score (if available) */}
-        {node.ccs !== undefined && (
-          <div>
-            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              CCS (Choice Consequence Score)
-            </label>
-            <div className="mt-2 px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
-              <div className="text-2xl font-bold text-white">{node.ccs}</div>
-            </div>
-          </div>
-        )}
-
         {/* Normalized Weight Display */}
         <div>
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Weight (Normalized)
-          </label>
-          <div className="mt-2 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Weight (Normalized)
+            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="w-3 h-3 text-gray-500 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Weights are auto-calculated and normalized so siblings total 100%</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <div className="px-4 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg">
             <div className="text-xl font-semibold text-white">{node.weight ?? rawWeight}%</div>
             <p className="text-xs text-gray-400 mt-1">
               {node.weight ? "Normalized among siblings" : "Will normalize on save"}
             </p>
-          </div>
-        </div>
-
-        {/* Importance Slider */}
-        <div>
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">
-            Importance
-          </label>
-          <div className="flex items-center gap-4">
-            <Slider
-              value={[importance]}
-              onValueChange={(value) => setImportance(value[0])}
-              min={0}
-              max={100}
-              step={1}
-              className="flex-1"
-            />
-            <div className="text-white font-semibold w-12 text-right">{importance}</div>
-          </div>
-        </div>
-
-        {/* Emotional Weight Slider */}
-        <div>
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">
-            Emotional Weight
-          </label>
-          <div className="flex items-center gap-4">
-            <Slider
-              value={[emotionalWeight]}
-              onValueChange={(value) => setEmotionalWeight(value[0])}
-              min={0}
-              max={100}
-              step={1}
-              className="flex-1"
-            />
-            <div className="text-white font-semibold w-12 text-right">{emotionalWeight}</div>
-          </div>
-        </div>
-
-        {/* Uncertainty Slider */}
-        <div>
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">
-            Uncertainty
-          </label>
-          <div className="flex items-center gap-4">
-            <Slider
-              value={[uncertainty]}
-              onValueChange={(value) => setUncertainty(value[0])}
-              min={0}
-              max={100}
-              step={1}
-              className="flex-1"
-            />
-            <div className="text-white font-semibold w-12 text-right">{uncertainty}</div>
-          </div>
-        </div>
-
-        {/* Regret Potential Slider */}
-        <div>
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">
-            Regret Potential
-          </label>
-          <div className="flex items-center gap-4">
-            <Slider
-              value={[regretPotential]}
-              onValueChange={(value) => setRegretPotential(value[0])}
-              min={0}
-              max={100}
-              step={1}
-              className="flex-1"
-            />
-            <div className="text-white font-semibold w-12 text-right">{regretPotential}</div>
           </div>
         </div>
 
@@ -328,26 +298,173 @@ export function NodeDetailsPanel({ node, onClose, onUpdate }: NodeDetailsPanelPr
           <Textarea
             value={localNotes}
             onChange={(e) => setLocalNotes(e.target.value)}
-            className="mt-2 bg-white/5 border-white/20 text-white min-h-[120px]"
+            disabled={isReadOnly}
+            className="mt-2 bg-white/5 border-white/20 text-white min-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder="Add your notes here..."
           />
         </div>
+
+        {/* Draft Mode Only: Advanced Settings */}
+        {!isActive && !isReadOnly && (
+          <>
+            {/* Address */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-4 h-4 text-blue-400" />
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location Address</label>
+              </div>
+              <Input
+                value={localAddress}
+                onChange={(e) => setLocalAddress(e.target.value)}
+                className="bg-white/5 border-white/20 text-white"
+                placeholder="e.g., 1 Infinite Loop, Cupertino, CA"
+              />
+              <p className="text-xs text-gray-500 mt-2">Optional: Add an address for AI to consider during analysis</p>
+            </div>
+
+            {/* CCS Score (if available) */}
+            {node.ccs !== undefined && (
+              <div>
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  CCS (Choice Consequence Score)
+                </label>
+                <div className="mt-2 px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
+                  <div className="text-2xl font-bold text-white">{node.ccs}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Importance Slider */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  Importance
+                </label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How critical is this factor to your decision?</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[importance]}
+                  onValueChange={(value) => setImportance(value[0])}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <div className="text-white font-semibold w-12 text-right">{importance}</div>
+              </div>
+            </div>
+
+            {/* Emotional Weight Slider */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  Emotional Weight
+                </label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How emotionally invested are you in this factor?</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[emotionalWeight]}
+                  onValueChange={(value) => setEmotionalWeight(value[0])}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <div className="text-white font-semibold w-12 text-right">{emotionalWeight}</div>
+              </div>
+            </div>
+
+            {/* Uncertainty Slider */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  Uncertainty
+                </label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How uncertain are you about this factor's outcome?</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[uncertainty]}
+                  onValueChange={(value) => setUncertainty(value[0])}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <div className="text-white font-semibold w-12 text-right">{uncertainty}</div>
+              </div>
+            </div>
+
+            {/* Regret Potential Slider */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  Regret Potential
+                </label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How much might you regret not choosing this?</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[regretPotential]}
+                  onValueChange={(value) => setRegretPotential(value[0])}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <div className="text-white font-semibold w-12 text-right">{regretPotential}</div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer Actions */}
       <div className="p-4 border-t border-white/10 flex gap-3">
-        <Button
-          onClick={handleSave}
-          className="flex-1 bg-white text-black hover:bg-gray-200 font-semibold"
-        >
-          Save Changes
-        </Button>
+        {!isReadOnly && !isActive && (
+          <Button
+            onClick={handleSave}
+            className="flex-1 bg-white text-black hover:bg-gray-200 font-semibold"
+          >
+            Save Changes
+          </Button>
+        )}
         <Button
           onClick={onClose}
           variant="outline"
-          className="border-white/30 text-white hover:bg-white/10"
+          className={`${isReadOnly || isActive ? 'flex-1' : ''} border-white/30 text-white hover:bg-white/10`}
         >
-          Cancel
+          {isReadOnly || isActive ? "Close" : "Cancel"}
         </Button>
       </div>
     </div>

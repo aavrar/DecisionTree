@@ -10,6 +10,7 @@ interface UseDecisionsResult {
   createDecision: (decision: Omit<Decision, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Decision | null>
   updateDecision: (id: string, updates: Partial<Decision>) => Promise<Decision | null>
   deleteDecision: (id: string) => Promise<boolean>
+  duplicateDecision: (id: string) => Promise<Decision | null>
   pagination: {
     page: number
     limit: number
@@ -115,6 +116,21 @@ export function useDecisions(options: UseDecisionsOptions = {}): UseDecisionsRes
     }
   }, [fetchDecisions])
 
+  const duplicateDecision = useCallback(async (id: string): Promise<Decision | null> => {
+    try {
+      const response = await api.decisions.duplicate(id)
+      await fetchDecisions()
+      return response.data.decision
+    } catch (err) {
+      const errorMessage = err instanceof APIError
+        ? err.message
+        : 'Failed to duplicate decision'
+      setError(errorMessage)
+      console.error('Error duplicating decision:', err)
+      return null
+    }
+  }, [fetchDecisions])
+
   return {
     decisions,
     loading,
@@ -123,6 +139,7 @@ export function useDecisions(options: UseDecisionsOptions = {}): UseDecisionsRes
     createDecision,
     updateDecision,
     deleteDecision,
+    duplicateDecision,
     pagination,
   }
 }
