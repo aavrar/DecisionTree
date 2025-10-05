@@ -233,7 +233,7 @@ export default function Dashboard() {
       alert("Please save the decision first")
       return
     }
-    await analyzeDecision(currentDecision.id)
+    await analyzeDecision(currentDecision.id, currentDecision)
   }, [currentDecision, analyzeDecision])
 
   const handleLogout = () => {

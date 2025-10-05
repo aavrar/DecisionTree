@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { authenticateToken } from '../middleware/auth';
-import { analyzeDecision, getCachedAnalysis, clearAnalysisCache } from '../controllers/analysisController';
+import { analyzeDecision } from '../controllers/analysisController';
 
 const router = express.Router();
 
@@ -31,18 +31,6 @@ router.post(
   analysisRateLimiter,
   perMinuteRateLimiter,
   analyzeDecision
-);
-
-router.get(
-  '/:id/analysis',
-  authenticateToken,
-  getCachedAnalysis
-);
-
-router.delete(
-  '/:id/analysis',
-  authenticateToken,
-  clearAnalysisCache
 );
 
 export default router;

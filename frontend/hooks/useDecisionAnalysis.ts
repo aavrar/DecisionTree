@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Decision } from '@/types/decision';
 
 export interface BiasFlag {
   type: string;
@@ -56,13 +57,79 @@ export interface AnalysisData {
   aiUnavailable?: boolean;
 }
 
+// Simple hash function for decision data
+function hashDecision(decision: Decision): string {
+  const data = JSON.stringify({
+    factors: decision.factors,
+    emotionalContext: decision.emotionalContext,
+  });
+
+  // Simple hash implementation
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
+// Get cached analysis from sessionStorage
+function getCachedFromStorage(decisionId: string, decisionHash: string): AnalysisData | null {
+  try {
+    const cacheKey = `analysis_${decisionId}_${decisionHash}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Check if cache is still valid (within 24 hours)
+      const cacheAge = Date.now() - new Date(parsed.cachedAt).getTime();
+      if (cacheAge < 24 * 60 * 60 * 1000) {
+        return { ...parsed.data, cached: true };
+      }
+    }
+  } catch (err) {
+    console.error('Failed to read from cache:', err);
+  }
+  return null;
+}
+
+// Save analysis to sessionStorage
+function saveToStorage(decisionId: string, decisionHash: string, data: AnalysisData): void {
+  try {
+    const cacheKey = `analysis_${decisionId}_${decisionHash}`;
+    sessionStorage.setItem(cacheKey, JSON.stringify({
+      data,
+      cachedAt: new Date().toISOString(),
+    }));
+  } catch (err) {
+    console.error('Failed to save to cache:', err);
+  }
+}
+
+// Clear analysis from sessionStorage
+function clearFromStorage(decisionId: string): void {
+  try {
+    // Remove all cache entries for this decision
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(`analysis_${decisionId}_`)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+  } catch (err) {
+    console.error('Failed to clear cache:', err);
+  }
+}
+
 export function useDecisionAnalysis() {
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
-  const analyzeDecision = async (decisionId: string) => {
+  const analyzeDecision = async (decisionId: string, decision?: Decision) => {
     if (!decisionId) {
       setError('Decision ID is required');
       return;
@@ -72,6 +139,16 @@ export function useDecisionAnalysis() {
     if (cooldownSeconds > 0) {
       setError(`Please wait ${cooldownSeconds} seconds before analyzing again`);
       return;
+    }
+
+    // Check browser cache first
+    if (decision) {
+      const decisionHash = hashDecision(decision);
+      const cached = getCachedFromStorage(decisionId, decisionHash);
+      if (cached) {
+        setAnalysis(cached);
+        return;
+      }
     }
 
     setLoading(true);
@@ -116,7 +193,15 @@ export function useDecisionAnalysis() {
       }
 
       if (data.success) {
-        setAnalysis(data.data);
+        const analysisData = { ...data.data, cached: false };
+        setAnalysis(analysisData);
+
+        // Save to browser cache
+        if (decision) {
+          const decisionHash = hashDecision(decision);
+          saveToStorage(decisionId, decisionHash, analysisData);
+        }
+
         // Start cooldown after successful analysis
         setCooldownSeconds(30);
         const interval = setInterval(() => {
@@ -139,62 +224,9 @@ export function useDecisionAnalysis() {
     }
   };
 
-  const getCachedAnalysis = async (decisionId: string) => {
-    if (!decisionId) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/decisions/${decisionId}/analysis`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setAnalysis(data.data);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to get cached analysis:', err);
-    }
-  };
-
-  const clearCache = async (decisionId: string) => {
-    if (!decisionId) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        return;
-      }
-
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/decisions/${decisionId}/analysis`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      setAnalysis(null);
-    } catch (err) {
-      console.error('Failed to clear cache:', err);
-    }
+  const clearCache = (decisionId: string) => {
+    clearFromStorage(decisionId);
+    setAnalysis(null);
   };
 
   const reset = () => {
@@ -209,7 +241,6 @@ export function useDecisionAnalysis() {
     error,
     cooldownSeconds,
     analyzeDecision,
-    getCachedAnalysis,
     clearCache,
     reset,
   };
