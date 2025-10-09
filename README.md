@@ -356,7 +356,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For questions, issues, or feature requests:
 - Open an issue on GitHub
-- Contact: [aahadvakani@gmail,com]
+- Contact: [aahadvakani@gmail.com]
 - Documentation: See [plan.md](./plan.md) for detailed roadmap
 
 ---
