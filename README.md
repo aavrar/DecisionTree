@@ -58,8 +58,8 @@ Branches transforms complex decisions into beautiful, interactive visual trees. 
 - **Deployment**: Render (serverless backend)
 
 ### Infrastructure
-- **Frontend**: Vercel (https://decision-tree-one.vercel.app)
-- **Backend**: Render (https://branches-0huw.onrender.com)
+- **Frontend**: Vercel 
+- **Backend**: Render 
 - **Database**: MongoDB Atlas (cloud cluster)
 - **CDN**: Cloudflare (DNS & optimization)
 
@@ -162,14 +162,6 @@ CSSeminar/
    ```
    Frontend runs on http://localhost:3000
 
-### Google OAuth Setup
-
-See [GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md) for detailed instructions on:
-- Creating a Google Cloud project
-- Configuring OAuth consent screen
-- Generating client credentials
-- Setting authorized redirect URIs
-
 ## API Endpoints
 
 ### Authentication
@@ -226,22 +218,6 @@ Authorization: Bearer <your_jwt_token>
 - Performance optimization (Core Web Vitals)
 - Full production hardening
 
-## Extra Credit Features
-
-### Tier 1: Game-Changing
-- [COMPLETE] **3D Interactive Decision Cosmos** - Three.js immersive visualization
-- [PLANNED] **AI Decision Psychology Engine** - Bias detection
-- [PLANNED] **Temporal Decision Lens** - Future self simulator
-
-### Tier 2: Technically Impressive
-- [PLANNED] **Voice-Controlled Decision Creation** - Speech-to-text
-- [COMPLETE] **Decision Emotional Intelligence** - Stress/confidence tracking
-- [PLANNED] **Collaborative Decision Intelligence** - Sharing & advisors
-
-### Tier 3: Professional Grade
-- [PLANNED] **Decision Portfolio Analytics** - Style analysis
-- [PLANNED] **Advanced Export & Reporting** - PDF reports
-- [PLANNED] **Decision Coaching AI** - Real-time suggestions
 
 ## Design Philosophy
 
@@ -348,7 +324,7 @@ npm run lint         # Run ESLint
 
 ### Frontend can't reach backend
 - Verify NEXT_PUBLIC_API_URL is set correctly
-- Check backend health endpoint: `curl https://branches-0huw.onrender.com/api/health`
+- Check backend health endpoint
 - Ensure Render backend is not sleeping (free tier limitation)
 
 ## Contributing
