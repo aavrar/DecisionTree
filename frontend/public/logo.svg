@@ -1,0 +1,17 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Branch Logo - All White -->
+
+  <!-- Main branch -->
+  <path d="M100 180 Q95 140 90 100 Q88 80 92 60 Q95 40 100 20"
+        stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+  <!-- Side shoots -->
+  <path d="M90 130 Q70 120 60 110" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M91 100 Q110 85 125 75" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M92 70 Q75 60 65 50" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Buds -->
+  <circle cx="60" cy="110" r="4" fill="white"/>
+  <circle cx="125" cy="75" r="4" fill="white"/>
+  <circle cx="65" cy="50" r="3" fill="white"/>
+</svg>
