@@ -58,7 +58,25 @@ export default function Dashboard() {
     // If authenticated via NextAuth but no token in localStorage, get one from backend
     if (status === "authenticated" && session?.user?.email) {
       const existingToken = localStorage.getItem('authToken')
-      if (!existingToken) {
+
+      // Check if token is expired
+      let tokenExpired = false
+      if (existingToken) {
+        try {
+          const payload = JSON.parse(atob(existingToken.split('.')[1]))
+          const expiration = payload.exp * 1000
+          tokenExpired = Date.now() >= expiration
+        } catch (err) {
+          tokenExpired = true
+        }
+      }
+
+      if (!existingToken || tokenExpired) {
+        // Clear expired token and get new one
+        if (tokenExpired) {
+          localStorage.removeItem('authToken')
+        }
+
         // Call backend to get/create token
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google-signin`, {
           method: 'POST',
@@ -81,7 +99,7 @@ export default function Dashboard() {
           })
           .catch(err => console.error('Failed to get auth token:', err))
       } else {
-        // Token exists, fetch decisions
+        // Token exists and is valid, fetch decisions
         refetchDecisions()
       }
     }
@@ -237,6 +255,7 @@ export default function Dashboard() {
   }, [currentDecision, analyzeDecision])
 
   const handleLogout = () => {
+    localStorage.removeItem('authToken')
     signOut({ callbackUrl: "/signup" })
   }
 

@@ -31,7 +31,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         <div className="p-6 space-y-6 overflow-y-auto max-h-[60vh]">
           {/* Introduction */}
           <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-2">Lego-Style Decision Building</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">'Lego-Style' Branch Building</h3>
             <p className="text-gray-300 text-sm">
               Branches uses a flexible, build-as-you-go approach. Start simple and expand your decision tree by adding nodes (factors, outcomes, considerations) wherever needed. Think of it like building with Lego blocks - add pieces as your decision becomes clearer.
             </p>
