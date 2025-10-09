@@ -87,7 +87,7 @@ export function ActiveBranchesSidebar({
           </div>
         ) : activeBranches.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">No active decisions</p>
+            <p className="text-gray-500 text-sm">No active Branches</p>
             <p className="text-gray-600 text-xs mt-1">Create one to get started</p>
           </div>
         ) : (
