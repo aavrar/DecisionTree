@@ -2,7 +2,7 @@
 
 A cutting-edge decision-making platform that combines psychology-informed design with interactive 3D visualization to help users make better, more confident decisions.
 
-**Live Demo**: [https://decision-tree-one.vercel.app](https://decision-tree-one.vercel.app)
+**Live Demo**: [https://branches.aahadv.com](https://branches.aahadv.com)
 
 ## Overview
 
