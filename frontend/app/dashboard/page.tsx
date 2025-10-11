@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Edit2 } from "lucide-react"
+import { Edit2, Menu, X } from "lucide-react"
 import { DashboardNav } from "@/components/dashboard-nav"
 import { ActiveBranchesSidebar } from "@/components/active-branches-sidebar"
 import { InteractiveTreeView } from "@/components/interactive-tree-view"
@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d")
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState("")
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
 
   const { decisions, loading: decisionsLoading, refetch: refetchDecisions, deleteDecision, updateDecision, createDecision, duplicateDecision } = useDecisions({ limit: 50, autoFetch: false })
@@ -342,27 +343,63 @@ export default function Dashboard() {
 
       {/* Main Layout */}
       <div className="flex-1 flex overflow-hidden relative z-10">
+        {/* Mobile Hamburger Button */}
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="md:hidden fixed top-20 left-4 z-40 p-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
+        {/* Mobile Overlay */}
+        {isMobileSidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
         {/* Left Sidebar - Active Branches */}
-        <ActiveBranchesSidebar
-          decisions={decisions || []}
-          selectedDecisionId={currentDecision.id}
-          onSelectDecision={handleSelectDecision}
-          onCreateNew={handleNewDecision}
-          onDeleteDecision={handleDeleteDecision}
-          onArchiveDecision={handleArchiveDecision}
-          onUnarchiveDecision={handleUnarchiveDecision}
-          onDuplicateDecision={handleDuplicateDecision}
-          loading={decisionsLoading}
-          activeTab={activeTab}
-        />
+        <div className={`
+          fixed md:relative inset-y-0 left-0 z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="md:hidden absolute top-4 right-4 z-10 p-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <ActiveBranchesSidebar
+            decisions={decisions || []}
+            selectedDecisionId={currentDecision.id}
+            onSelectDecision={(id) => {
+              handleSelectDecision(id)
+              setIsMobileSidebarOpen(false) // Close sidebar on mobile after selection
+            }}
+            onCreateNew={() => {
+              handleNewDecision()
+              setIsMobileSidebarOpen(false)
+            }}
+            onDeleteDecision={handleDeleteDecision}
+            onArchiveDecision={handleArchiveDecision}
+            onUnarchiveDecision={handleUnarchiveDecision}
+            onDuplicateDecision={handleDuplicateDecision}
+            loading={decisionsLoading}
+            activeTab={activeTab}
+          />
+        </div>
 
         {/* Main Content Area - Tree Builder Embedded */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {currentDecision.id ? (
             <>
               {/* Tree Builder Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black">
-                <div className="flex items-center gap-3 flex-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border-b border-white/10 bg-black gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
                   {isEditingTitle ? (
                     <input
                       ref={titleInputRef}
@@ -371,43 +408,43 @@ export default function Dashboard() {
                       onChange={(e) => setEditedTitle(e.target.value)}
                       onBlur={handleSaveTitle}
                       onKeyDown={handleKeyDownTitle}
-                      className="text-xl font-bold text-white bg-white/10 border border-white/20 rounded px-3 py-1 focus:outline-none focus:border-white/40"
+                      className="text-lg sm:text-xl font-bold text-white bg-white/10 border border-white/20 rounded px-3 py-1 focus:outline-none focus:border-white/40 w-full"
                       placeholder="Enter decision title..."
                     />
                   ) : (
-                    <div className="flex items-center gap-2 group">
-                      <h2 className="text-xl font-bold text-white">{currentDecision.title || "Untitled Decision"}</h2>
+                    <div className="flex items-center gap-2 group min-w-0 w-full">
+                      <h2 className="text-lg sm:text-xl font-bold text-white truncate">{currentDecision.title || "Untitled Decision"}</h2>
                       <button
                         onClick={handleStartEditTitle}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded flex-shrink-0"
                       >
                         <Edit2 className="w-4 h-4 text-gray-400" />
                       </button>
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                   {/* View Toggle */}
-                  <div className="flex bg-white/5 rounded-lg p-1 border border-white/20">
+                  <div className="flex bg-white/5 rounded-lg p-1 border border-white/20 w-full sm:w-auto">
                     <button
                       onClick={() => setViewMode("2d")}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
                         viewMode === "2d"
                           ? "bg-white text-black"
                           : "text-gray-400 hover:text-white"
                       }`}
                     >
-                      2D View
+                      2D
                     </button>
                     <button
                       onClick={() => setViewMode("3d")}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
                         viewMode === "3d"
                           ? "bg-white text-black"
                           : "text-gray-400 hover:text-white"
                       }`}
                     >
-                      3D View
+                      3D
                     </button>
                   </div>
                 </div>

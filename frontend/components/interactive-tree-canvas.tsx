@@ -232,6 +232,31 @@ export function InteractiveTreeCanvas({
     setIsDragging(false)
   }
 
+  // Touch event handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement
+    if (e.touches.length === 1 && (target.classList.contains('tree-canvas-background') || target.tagName === 'svg' || target.tagName === 'path')) {
+      const touch = e.touches[0]
+      setIsDragging(true)
+      setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y })
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      const touch = e.touches[0]
+      setPan({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y
+      })
+      e.preventDefault()
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+  }
+
   const handleZoomIn = () => setZoom(prev => Math.min(3, prev + 0.2))
   const handleZoomOut = () => setZoom(prev => Math.max(0.1, prev - 0.2))
   const handleResetView = () => {
@@ -255,43 +280,46 @@ export function InteractiveTreeCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-900 cursor-grab active:cursor-grabbing"
+      className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-900 cursor-grab active:cursor-grabbing touch-none"
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 z-30 flex gap-2 bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg p-2">
+      <div className="absolute top-2 right-2 md:top-4 md:right-4 z-30 flex gap-1 md:gap-2 bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg p-1 md:p-2">
         <Button
           size="sm"
           variant="ghost"
           onClick={handleZoomIn}
-          className="text-white hover:bg-white/10"
+          className="text-white hover:bg-white/10 h-8 w-8 md:h-10 md:w-10 p-0"
           title="Zoom In"
         >
-          <ZoomIn className="h-4 w-4" />
+          <ZoomIn className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={handleZoomOut}
-          className="text-white hover:bg-white/10"
+          className="text-white hover:bg-white/10 h-8 w-8 md:h-10 md:w-10 p-0"
           title="Zoom Out"
         >
-          <ZoomOut className="h-4 w-4" />
+          <ZoomOut className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={handleResetView}
-          className="text-white hover:bg-white/10"
+          className="text-white hover:bg-white/10 h-8 w-8 md:h-10 md:w-10 p-0"
           title="Reset View"
         >
-          <Maximize2 className="h-4 w-4" />
+          <Maximize2 className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
-        <div className="flex items-center px-2 text-white text-xs">
+        <div className="flex items-center px-1 md:px-2 text-white text-xs">
           {Math.round(zoom * 100)}%
         </div>
       </div>

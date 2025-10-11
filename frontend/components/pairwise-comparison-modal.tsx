@@ -190,8 +190,8 @@ export function PairwiseComparisonModal({
     const interpretation = getConsistencyInterpretation(consistencyRatio)
 
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none">
-        <div className="bg-black border border-white/20 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden relative z-[101] pointer-events-auto">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none p-0 md:p-4">
+        <div className="bg-black border-0 md:border border-white/20 rounded-none md:rounded-lg shadow-2xl w-full h-full md:h-auto md:max-w-2xl md:max-h-[90vh] overflow-hidden relative z-[101] pointer-events-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <div>
@@ -307,12 +307,12 @@ export function PairwiseComparisonModal({
   const progress = ((currentPairIndex + 1) / totalPairs) * 100
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none">
-      <div className="bg-black border border-white/20 rounded-lg shadow-2xl w-full max-w-2xl relative z-[101] pointer-events-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none p-0 md:p-4">
+      <div className="bg-black border-0 md:border border-white/20 rounded-none md:rounded-lg shadow-2xl w-full h-full md:h-auto md:max-w-2xl overflow-y-auto relative z-[101] pointer-events-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg md:text-2xl font-bold text-white flex items-center gap-2 flex-wrap">
               <Scale className="w-6 h-6" />
               Pairwise Comparison
               {groupProgress && (

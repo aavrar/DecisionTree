@@ -17,13 +17,13 @@ export function WeightingMethodModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none">
-      <div className="bg-black border border-white/20 rounded-lg shadow-2xl w-full max-w-2xl relative z-[101] pointer-events-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none p-0 md:p-4">
+      <div className="bg-black border-0 md:border border-white/20 rounded-none md:rounded-lg shadow-2xl w-full h-full md:h-auto md:max-w-2xl overflow-y-auto relative z-[101] pointer-events-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Choose Weighting Method</h2>
-            <p className="text-sm text-gray-400 mt-1">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-bold text-white">Choose Weighting Method</h2>
+            <p className="text-xs md:text-sm text-gray-400 mt-1">
               How would you like to weight your decision factors?
             </p>
           </div>
@@ -38,11 +38,11 @@ export function WeightingMethodModal({
         </div>
 
         {/* Method Options */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 md:p-6 space-y-3 md:space-y-4">
           {/* AHP Method */}
           <button
             onClick={() => onSelectMethod("ahp")}
-            className="w-full p-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 hover:border-purple-500/50 rounded-lg transition-all hover:scale-105 text-left"
+            className="w-full p-4 md:p-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 hover:border-purple-500/50 rounded-lg transition-all active:scale-95 md:hover:scale-105 text-left"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 bg-purple-500/20 rounded-lg">
@@ -74,7 +74,7 @@ export function WeightingMethodModal({
           {/* Equal Weights Method */}
           <button
             onClick={() => onSelectMethod("equal")}
-            className="w-full p-6 bg-white/5 border-2 border-white/10 hover:border-white/20 rounded-lg transition-all hover:scale-105 text-left"
+            className="w-full p-4 md:p-6 bg-white/5 border-2 border-white/10 hover:border-white/20 rounded-lg transition-all active:scale-95 md:hover:scale-105 text-left"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 bg-white/10 rounded-lg">

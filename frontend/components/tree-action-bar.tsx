@@ -37,17 +37,18 @@ export function TreeActionBar({
   const isReadOnly = decisionStatus === "complete"
 
   return (
-    <div className="flex items-center gap-3 p-4 bg-black border-b border-white/10">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-black border-b border-white/10">
       {/* Mark as Active - Only show for draft status */}
       {decisionStatus === "draft" && onMarkActive && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               onClick={onMarkActive}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold gap-2"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10"
             >
-              <Play className="w-4 h-4" />
-              Mark as Active
+              <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Mark as Active</span>
+              <span className="sm:hidden">Active</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -63,10 +64,11 @@ export function TreeActionBar({
             <Button
               onClick={onMarkDraft}
               variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 font-semibold gap-2"
+              className="border-white/30 text-white hover:bg-white/10 font-semibold gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10"
             >
-              <Edit2 className="w-4 h-4" />
-              Back to Draft
+              <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Back to Draft</span>
+              <span className="sm:hidden">Draft</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -81,10 +83,11 @@ export function TreeActionBar({
           <TooltipTrigger asChild>
             <Button
               onClick={onMarkComplete}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10"
             >
-              <CheckCircle className="w-4 h-4" />
-              Mark as Complete
+              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Mark as Complete</span>
+              <span className="sm:hidden">Complete</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -99,10 +102,11 @@ export function TreeActionBar({
           <TooltipTrigger asChild>
             <Button
               onClick={onRecalculateWeights}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold gap-2"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10"
             >
-              <Scale className="w-4 h-4" />
-              Recalculate Weights
+              <Scale className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">Recalculate Weights</span>
+              <span className="lg:hidden">Weights</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -117,10 +121,10 @@ export function TreeActionBar({
           <Button
             onClick={onAnalyze}
             disabled={isDisabled}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold gap-1 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10"
           >
-            <Sparkles className="w-4 h-4" />
-            {analyzing ? "Analyzing..." : cooldownSeconds > 0 ? `Wait ${cooldownSeconds}s` : "AI Analysis"}
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>{analyzing ? "Analyzing..." : cooldownSeconds > 0 ? `${cooldownSeconds}s` : "AI"}</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -134,10 +138,10 @@ export function TreeActionBar({
           <Button
             onClick={onAddNode}
             disabled={!selectedNodeId || isReadOnly}
-            className="bg-white text-black hover:bg-gray-200 font-semibold gap-2 disabled:opacity-50"
+            className="bg-white text-black hover:bg-gray-200 font-semibold gap-1 disabled:opacity-50 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
           >
-            <Plus className="w-4 h-4" />
-            Add Node
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Add</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -152,10 +156,10 @@ export function TreeActionBar({
             onClick={onEditNode}
             disabled={!selectedNodeId || isReadOnly}
             variant="outline"
-            className="border-white/30 text-white hover:bg-white/10 font-semibold gap-2 disabled:opacity-50"
+            className="border-white/30 text-white hover:bg-white/10 font-semibold gap-1 disabled:opacity-50 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
           >
-            <Edit2 className="w-4 h-4" />
-            Edit
+            <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Edit</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -170,10 +174,10 @@ export function TreeActionBar({
             onClick={onDeleteNode}
             disabled={!selectedNodeId || isReadOnly}
             variant="outline"
-            className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 font-semibold gap-2 disabled:opacity-50"
+            className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 font-semibold gap-1 disabled:opacity-50 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
           >
-            <Trash2 className="w-4 h-4" />
-            Delete
+            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -182,9 +186,9 @@ export function TreeActionBar({
       </Tooltip>
 
       {/* Status Indicator */}
-      <div className="ml-auto flex items-center gap-3">
-        {selectedNodeId && <span className="text-sm text-gray-400">Node selected</span>}
-        {isReadOnly && <span className="text-sm text-blue-400 font-medium">Read-Only Mode</span>}
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        {selectedNodeId && <span className="hidden sm:inline text-xs sm:text-sm text-gray-400">Node selected</span>}
+        {isReadOnly && <span className="text-xs sm:text-sm text-blue-400 font-medium">Read-Only</span>}
       </div>
     </div>
   )
