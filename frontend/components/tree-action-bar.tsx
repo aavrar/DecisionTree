@@ -1,6 +1,6 @@
 "use client"
 
-import { Sparkles, Plus, Trash2, Edit2, Play, CheckCircle } from "lucide-react"
+import { Sparkles, Plus, Trash2, Edit2, Play, CheckCircle, Scale } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
@@ -12,7 +12,9 @@ interface TreeActionBarProps {
   onDeleteNode: () => void
   onEditNode: () => void
   onMarkActive?: () => void
+  onMarkDraft?: () => void
   onMarkComplete?: () => void
+  onRecalculateWeights?: () => void
   analyzing?: boolean
   cooldownSeconds?: number
 }
@@ -25,7 +27,9 @@ export function TreeActionBar({
   onDeleteNode,
   onEditNode,
   onMarkActive,
+  onMarkDraft,
   onMarkComplete,
+  onRecalculateWeights,
   analyzing = false,
   cooldownSeconds = 0,
 }: TreeActionBarProps) {
@@ -52,6 +56,25 @@ export function TreeActionBar({
         </Tooltip>
       )}
 
+      {/* Back to Draft - Only show for active status */}
+      {decisionStatus === "active" && onMarkDraft && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onMarkDraft}
+              variant="outline"
+              className="border-white/30 text-white hover:bg-white/10 font-semibold gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Back to Draft
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Return to draft mode to edit factors and weights</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+
       {/* Mark as Complete - Only show for active status */}
       {decisionStatus === "active" && onMarkComplete && (
         <Tooltip>
@@ -66,6 +89,24 @@ export function TreeActionBar({
           </TooltipTrigger>
           <TooltipContent>
             <p>Lock this decision as complete and read-only</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+
+      {/* Recalculate Weights - Only show for active status */}
+      {decisionStatus === "active" && onRecalculateWeights && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onRecalculateWeights}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold gap-2"
+            >
+              <Scale className="w-4 h-4" />
+              Recalculate Weights
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Re-run pairwise comparisons to update weights</p>
           </TooltipContent>
         </Tooltip>
       )}

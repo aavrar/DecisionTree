@@ -6,6 +6,8 @@ import { InteractiveTreeCanvas } from "@/components/interactive-tree-canvas"
 import { NodeDetailsPanel } from "@/components/node-details-panel"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { TreeActionBar } from "@/components/tree-action-bar"
+import { PairwiseComparisonModal } from "@/components/pairwise-comparison-modal"
+import { WeightingMethodModal } from "@/components/weighting-method-modal"
 import type { Decision, TreeNodeData, Factor } from "@/types/decision"
 
 interface InteractiveTreeViewProps {
@@ -16,10 +18,11 @@ interface InteractiveTreeViewProps {
   analyzing?: boolean
   cooldownSeconds?: number
   onMarkActive?: () => void
+  onMarkDraft?: () => void
   onMarkComplete?: () => void
 }
 
-export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false, cooldownSeconds = 0, onMarkActive, onMarkComplete }: InteractiveTreeViewProps) {
+export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAnalyze, analyzing = false, cooldownSeconds = 0, onMarkActive, onMarkDraft, onMarkComplete }: InteractiveTreeViewProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<TreeNodeData | null>(null)
   const [showDetailsPanel, setShowDetailsPanel] = useState(false)
@@ -28,6 +31,16 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [editingNode, setEditingNode] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [showComparisonModal, setShowComparisonModal] = useState(false)
+  const [comparisonParent, setComparisonParent] = useState<TreeNodeData | null>(null)
+
+  // Guided weighting workflow state
+  const [guidedWeightingActive, setGuidedWeightingActive] = useState(false)
+  const [isActivationMode, setIsActivationMode] = useState(false) // true = activating, false = recalculating
+  const [siblingGroups, setSiblingGroups] = useState<Array<Array<{ id: string; name: string }>>>([])
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
+  const [allWeights, setAllWeights] = useState<Record<string, number>>({})
+  const [showWeightingMethodModal, setShowWeightingMethodModal] = useState(false)
 
   const handleAddChild = (parentId: string) => {
     const newNode: TreeNodeData = {
@@ -168,6 +181,23 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
 
   const handleToolbarAddNode = () => {
     if (selectedNodeId && selectedNode) {
+      // Special case: if root node is selected, add a new top-level factor
+      if (selectedNodeId === 'root') {
+        const newFactor: Factor = {
+          id: Date.now().toString(),
+          name: "New Factor",
+          type: "consideration",
+          category: "personal",
+          weight: 0,
+          children: []
+        }
+
+        const updatedFactors = [...decision.factors, newFactor]
+        onUpdate({ ...decision, factors: updatedFactors })
+        setExpandedNodes(new Set([...expandedNodes, newFactor.id]))
+        return
+      }
+
       // Check if selected node is a factor itself
       const factorIndex = decision.factors.findIndex(f => f.id === selectedNodeId)
       if (factorIndex !== -1) {
@@ -205,6 +235,25 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
 
   const handleToolbarDeleteNode = () => {
     if (selectedNodeId && selectedNode) {
+      // Special case: cannot delete root node
+      if (selectedNodeId === 'root') {
+        alert("Cannot delete the root decision node")
+        return
+      }
+
+      // Check if selected node is a top-level factor
+      const factorIndex = decision.factors.findIndex(f => f.id === selectedNodeId)
+      if (factorIndex !== -1) {
+        // Deleting a top-level factor
+        const updatedFactors = decision.factors.filter(f => f.id !== selectedNodeId)
+        onUpdate({ ...decision, factors: updatedFactors })
+        setSelectedNodeId(null)
+        setSelectedNode(null)
+        setShowDetailsPanel(false)
+        return
+      }
+
+      // Otherwise, find the node in the tree
       const findNodePath = (nodes: TreeNodeData[], targetId: string, currentPath: number[] = []): number[] | null => {
         for (let i = 0; i < nodes.length; i++) {
           if (nodes[i].id === targetId) {
@@ -300,6 +349,218 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
     }
   }
 
+  // Collect all sibling groups from the decision tree that have 2+ children
+  const collectSiblingGroups = (factors: Factor[]): Array<Array<{ id: string; name: string }>> => {
+    const groups: Array<Array<{ id: string; name: string }>> = []
+
+    // Add top-level factors if there are 2 or more
+    if (factors.length >= 2) {
+      groups.push(factors.map(f => ({ id: f.id, name: f.name })))
+    }
+
+    // Recursively collect child groups
+    const collectFromNode = (node: TreeNodeData | Factor) => {
+      if (node.children && node.children.length >= 2) {
+        groups.push(node.children.map(c => ({ id: c.id, name: c.name })))
+        node.children.forEach(child => collectFromNode(child))
+      } else if (node.children && node.children.length === 1) {
+        // Still recurse even if only 1 child
+        collectFromNode(node.children[0])
+      }
+    }
+
+    factors.forEach(factor => collectFromNode(factor))
+    return groups
+  }
+
+  // Show weighting method selection modal when activating
+  const handleStartGuidedWeighting = () => {
+    setShowWeightingMethodModal(true)
+  }
+
+  // Handle weighting method selection
+  const handleWeightingMethodSelect = (method: "ahp" | "equal") => {
+    setShowWeightingMethodModal(false)
+
+    if (method === "equal") {
+      // Apply equal weights to all sibling groups and mark active
+      applyEqualWeightsAndActivate()
+    } else {
+      // Start AHP pairwise comparison workflow
+      startAHPWeighting()
+    }
+  }
+
+  // Apply equal weights to all nodes and mark as active
+  const applyEqualWeightsAndActivate = () => {
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    // Apply equal weights to all sibling groups
+    const applyEqualWeightsRecursive = (nodes: (TreeNodeData | Factor)[]) => {
+      if (nodes.length > 0) {
+        const equalWeight = Math.round(100 / nodes.length)
+        let remaining = 100
+
+        nodes.forEach((node, index) => {
+          if (index === nodes.length - 1) {
+            // Last node gets remaining weight to ensure sum is exactly 100
+            node.weight = remaining
+          } else {
+            node.weight = equalWeight
+            remaining -= equalWeight
+          }
+
+          if (node.children && node.children.length > 0) {
+            applyEqualWeightsRecursive(node.children)
+          }
+        })
+      }
+    }
+
+    applyEqualWeightsRecursive(updatedFactors)
+
+    // Single atomic update: apply weights AND mark as active
+    const updatedDecision = { ...decision, factors: updatedFactors, status: 'active' as const }
+    onUpdate(updatedDecision)
+  }
+
+  // Start AHP pairwise comparison workflow
+  const startAHPWeighting = () => {
+    const groups = collectSiblingGroups(decision.factors)
+
+    if (groups.length === 0) {
+      // No groups to weight, just mark active
+      onMarkActive?.()
+      return
+    }
+
+    setSiblingGroups(groups)
+    setCurrentGroupIndex(0)
+    setAllWeights({})
+    setIsActivationMode(true)
+    setGuidedWeightingActive(true)
+    setShowComparisonModal(true)
+    setComparisonParent(null)
+  }
+
+  // Handle completion of a single pairwise comparison (unified handler)
+  const handleGuidedWeightCompletion = (weights: Record<string, number>) => {
+    console.log('[GUIDED] handleGuidedWeightCompletion called with weights:', weights)
+    console.log('[GUIDED] Current group index:', currentGroupIndex, '/', siblingGroups.length - 1)
+    console.log('[GUIDED] isActivationMode:', isActivationMode)
+
+    // Merge these weights into allWeights
+    const updatedWeights = { ...allWeights, ...weights }
+    setAllWeights(updatedWeights)
+    console.log('[GUIDED] Updated allWeights:', updatedWeights)
+
+    // Move to next group or finish
+    if (currentGroupIndex < siblingGroups.length - 1) {
+      console.log('[GUIDED] Moving to next group')
+      setCurrentGroupIndex(currentGroupIndex + 1)
+    } else {
+      console.log('[GUIDED] All groups completed, applying weights')
+      // All groups completed - apply weights and conditionally mark active
+      if (isActivationMode) {
+        console.log('[GUIDED] Calling applyAllWeightsAndActivate')
+        applyAllWeightsAndActivate(updatedWeights)
+      } else {
+        console.log('[GUIDED] Calling applyAllWeightsOnly')
+        applyAllWeightsOnly(updatedWeights)
+      }
+    }
+  }
+
+  // Apply all collected weights and mark decision as active
+  const applyAllWeightsAndActivate = (weights: Record<string, number>) => {
+    console.log('[AHP] Starting weight application:', weights)
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    // Apply weights to all nodes
+    const applyWeightsRecursive = (nodes: (TreeNodeData | Factor)[]) => {
+      nodes.forEach(node => {
+        if (weights[node.id] !== undefined) {
+          console.log(`[AHP] Applying weight to ${node.name}: ${weights[node.id]}`)
+          node.weight = weights[node.id]
+        }
+        if (node.children && node.children.length > 0) {
+          applyWeightsRecursive(node.children)
+        }
+      })
+    }
+
+    applyWeightsRecursive(updatedFactors)
+    console.log('[AHP] Updated factors:', updatedFactors)
+
+    // Single atomic update: apply AHP weights AND mark as active
+    const updatedDecision = { ...decision, factors: updatedFactors, status: 'active' as const }
+    console.log('[AHP] Calling onUpdate with:', updatedDecision)
+    onUpdate(updatedDecision)
+
+    // Close modal and reset workflow state
+    setShowComparisonModal(false)
+    setGuidedWeightingActive(false)
+    setSiblingGroups([])
+    setCurrentGroupIndex(0)
+    setAllWeights({})
+  }
+
+  // Handle cancellation of guided weighting
+  const handleCancelGuidedWeighting = () => {
+    setShowComparisonModal(false)
+    setGuidedWeightingActive(false)
+    setSiblingGroups([])
+    setCurrentGroupIndex(0)
+    setAllWeights({})
+  }
+
+  // Recalculate weights in Active mode (doesn't change status)
+  const handleRecalculateWeights = () => {
+    const groups = collectSiblingGroups(decision.factors)
+
+    if (groups.length === 0) {
+      alert("No sibling groups to weight")
+      return
+    }
+
+    setSiblingGroups(groups)
+    setCurrentGroupIndex(0)
+    setAllWeights({})
+    setIsActivationMode(false)
+    setGuidedWeightingActive(true)
+    setShowComparisonModal(true)
+    setComparisonParent(null)
+  }
+
+  // Apply weights without changing status
+  const applyAllWeightsOnly = (weights: Record<string, number>) => {
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    // Apply weights to all nodes
+    const applyWeightsRecursive = (nodes: (TreeNodeData | Factor)[]) => {
+      nodes.forEach(node => {
+        if (weights[node.id] !== undefined) {
+          node.weight = weights[node.id]
+        }
+        if (node.children && node.children.length > 0) {
+          applyWeightsRecursive(node.children)
+        }
+      })
+    }
+
+    applyWeightsRecursive(updatedFactors)
+
+    // Update decision with new weights
+    onUpdate({ ...decision, factors: updatedFactors })
+
+    // Close modal and reset workflow state
+    setShowComparisonModal(false)
+    setGuidedWeightingActive(false)
+    setSiblingGroups([])
+    setCurrentGroupIndex(0)
+    setAllWeights({})
+  }
+
   // Helper function to calculate normalized weights for siblings
   const normalizeWeights = (nodes: (TreeNodeData | Factor)[]) => {
     if (!nodes || nodes.length === 0) return
@@ -380,13 +641,54 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
       })
     }
 
-    // Normalize weights among siblings
-    if (parentSiblings) {
+    // Only normalize weights if slider values were updated (not for other updates like name, description, etc.)
+    const sliderFieldsUpdated = updates.importance !== undefined ||
+                                  updates.emotionalWeight !== undefined ||
+                                  updates.uncertainty !== undefined ||
+                                  updates.regretPotential !== undefined
+
+    if (parentSiblings && sliderFieldsUpdated && decision.status === "draft") {
       normalizeWeights(parentSiblings)
     }
 
     onUpdate({ ...decision, factors: updatedFactors })
     setSelectedNode(prev => prev ? { ...prev, ...updates } : null)
+  }
+
+  const handleCompareChildrenWeights = (parentNode: TreeNodeData) => {
+    setComparisonParent(parentNode)
+    setShowComparisonModal(true)
+  }
+
+  const handleApplyWeights = (weights: Record<string, number>) => {
+    if (!comparisonParent) return
+
+    const updatedFactors = JSON.parse(JSON.stringify(decision.factors))
+
+    // Find and update the parent node's children weights
+    const updateNodeChildren = (nodes: TreeNodeData[]): boolean => {
+      for (const node of nodes) {
+        if (node.id === comparisonParent.id && node.children) {
+          // Apply weights to children
+          node.children.forEach((child: TreeNodeData) => {
+            if (weights[child.id] !== undefined) {
+              child.weight = weights[child.id]
+            }
+          })
+          return true
+        }
+        if (node.children && updateNodeChildren(node.children)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    // Update in factors
+    updateNodeChildren(updatedFactors)
+
+    onUpdate({ ...decision, factors: updatedFactors })
+    setComparisonParent(null)
   }
 
 
@@ -421,8 +723,10 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
         onAddNode={handleToolbarAddNode}
         onDeleteNode={handleToolbarDeleteNode}
         onEditNode={handleToolbarEditNode}
-        onMarkActive={onMarkActive}
+        onMarkActive={handleStartGuidedWeighting}
+        onMarkDraft={onMarkDraft}
         onMarkComplete={onMarkComplete}
+        onRecalculateWeights={handleRecalculateWeights}
         analyzing={analyzing}
         cooldownSeconds={cooldownSeconds}
       />
@@ -463,6 +767,41 @@ export function InteractiveTreeView({ decision, onUpdate, viewMode = "2d", onAna
           setDeleteDialogOpen(false)
           setNodeToDelete(null)
         }}
+      />
+
+      {/* Weighting Method Selection Modal */}
+      <WeightingMethodModal
+        isOpen={showWeightingMethodModal}
+        onClose={() => setShowWeightingMethodModal(false)}
+        onSelectMethod={handleWeightingMethodSelect}
+      />
+
+      {/* Pairwise Comparison Modal */}
+      <PairwiseComparisonModal
+        isOpen={showComparisonModal}
+        onClose={() => {
+          if (guidedWeightingActive) {
+            handleCancelGuidedWeighting()
+          } else {
+            setShowComparisonModal(false)
+            setComparisonParent(null)
+          }
+        }}
+        items={
+          guidedWeightingActive
+            ? siblingGroups[currentGroupIndex] || []
+            : comparisonParent?.children?.map(c => ({ id: c.id, name: c.name })) || []
+        }
+        onApplyWeights={
+          guidedWeightingActive
+            ? handleGuidedWeightCompletion
+            : handleApplyWeights
+        }
+        groupProgress={
+          guidedWeightingActive
+            ? { current: currentGroupIndex, total: siblingGroups.length }
+            : undefined
+        }
       />
     </div>
   )

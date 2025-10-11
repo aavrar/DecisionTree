@@ -180,9 +180,12 @@ export default function Dashboard() {
   }, [updateDecision, createDecision, refetchDecisions])
 
   const handleUpdateDecision = useCallback(async (updatedDecision: Decision) => {
+    console.log('[Dashboard] handleUpdateDecision called with:', updatedDecision)
     setCurrentDecision(updatedDecision)
     if (updatedDecision.id) {
-      await updateDecision(updatedDecision.id, updatedDecision)
+      console.log('[Dashboard] Calling API updateDecision')
+      const result = await updateDecision(updatedDecision.id, updatedDecision)
+      console.log('[Dashboard] API updateDecision result:', result)
       refetchDecisions()
     }
   }, [updateDecision, refetchDecisions])
@@ -231,6 +234,17 @@ export default function Dashboard() {
     }
     const updated = { ...currentDecision, status: 'active' as const }
     await updateDecision(currentDecision.id, { status: 'active' })
+    setCurrentDecision(updated)
+    refetchDecisions()
+  }, [currentDecision, updateDecision, refetchDecisions])
+
+  const handleMarkDraft = useCallback(async () => {
+    if (!currentDecision.id) {
+      alert("Please save the decision first")
+      return
+    }
+    const updated = { ...currentDecision, status: 'draft' as const }
+    await updateDecision(currentDecision.id, { status: 'draft' })
     setCurrentDecision(updated)
     refetchDecisions()
   }, [currentDecision, updateDecision, refetchDecisions])
@@ -409,6 +423,7 @@ export default function Dashboard() {
                   analyzing={analyzing}
                   cooldownSeconds={cooldownSeconds}
                   onMarkActive={handleMarkActive}
+                  onMarkDraft={handleMarkDraft}
                   onMarkComplete={handleMarkComplete}
                 />
               </div>

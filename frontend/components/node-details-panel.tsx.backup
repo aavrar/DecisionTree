@@ -26,12 +26,11 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
   const [localSelection, setLocalSelection] = useState<"yes" | "no" | "pending">("pending")
   const [showTypeMenu, setShowTypeMenu] = useState(false)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [importance, setImportance] = useState(50)
   const [emotionalWeight, setEmotionalWeight] = useState(50)
   const [uncertainty, setUncertainty] = useState(50)
   const [regretPotential, setRegretPotential] = useState(50)
-  const [showAdvanced, setShowAdvanced] = useState(false)
-  const [slidersModified, setSlidersModified] = useState(false)
 
   useEffect(() => {
     if (node) {
@@ -46,7 +45,6 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
       setEmotionalWeight(node.emotionalWeight ?? 50)
       setUncertainty(node.uncertainty ?? 50)
       setRegretPotential(node.regretPotential ?? 50)
-      setSlidersModified(false)
     }
   }, [node?.id])
 
@@ -54,27 +52,32 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
 
   const isReadOnly = decisionStatus === "complete"
   const isActive = decisionStatus === "active"
+  const isRootNode = node.id === 'root'
 
   const handleSave = () => {
-    const updates: Partial<TreeNodeData> = {
-      name: localName,
-      description: localDescription,
-      notes: localNotes,
-      address: localAddress,
-      type: localType,
-      category: localCategory,
-      selection: localSelection,
+    if (isRootNode) {
+      // Root node only updates name, description, and notes
+      onUpdate(node.id, {
+        name: localName,
+        description: localDescription,
+        notes: localNotes,
+      })
+    } else {
+      // Regular nodes update everything
+      onUpdate(node.id, {
+        name: localName,
+        description: localDescription,
+        notes: localNotes,
+        address: localAddress,
+        type: localType,
+        category: localCategory,
+        importance,
+        emotionalWeight,
+        uncertainty,
+        regretPotential,
+        selection: localSelection,
+      })
     }
-
-    // Only include slider values if they were actually modified
-    if (slidersModified) {
-      updates.importance = importance
-      updates.emotionalWeight = emotionalWeight
-      updates.uncertainty = uncertainty
-      updates.regretPotential = regretPotential
-    }
-
-    onUpdate(node.id, updates)
     onClose()
   }
 
@@ -136,7 +139,7 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <h2 className="text-lg font-semibold text-white">
-          {isReadOnly ? "Node Details (Read-Only)" : isActive ? "Branch Selection" : "Node Details"}
+          {isRootNode ? "Decision Details" : isReadOnly ? "Node Details (Read-Only)" : isActive ? "Branch Selection" : "Node Details"}
         </h2>
         <Button
           onClick={onClose}
@@ -150,47 +153,95 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Active Decision: Selection Buttons */}
-        {isActive && (
-          <div className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-white/20 rounded-lg p-4">
-            <label className="text-sm font-medium text-white mb-3 block">
-              Do you want to go down this branch?
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => handleSelection("yes")}
-                className={`flex items-center justify-center gap-2 font-semibold transition-all ${
-                  localSelection === "yes"
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
-                }`}
-              >
-                <ThumbsUp className="w-4 h-4" />
-                Yes
-              </Button>
-              <Button
-                onClick={() => handleSelection("no")}
-                className={`flex items-center justify-center gap-2 font-semibold transition-all ${
-                  localSelection === "no"
-                    ? "bg-red-600 text-white hover:bg-red-700"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
-                }`}
-              >
-                <ThumbsDown className="w-4 h-4" />
-                No
-              </Button>
-            </div>
-            {localSelection === "pending" && (
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                No selection made yet
+        {/* Root Node: Simplified View */}
+        {isRootNode ? (
+          <>
+            {/* Info Banner */}
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <p className="text-sm text-blue-300">
+                This is your main decision question. Child nodes represent the factors you're considering.
               </p>
-            )}
-          </div>
-        )}
+            </div>
 
-        {/* Node Type */}
-        <div className="relative">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Type</label>
+            {/* Decision Title */}
+            <div>
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Decision Question</label>
+              <Input
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                disabled={isReadOnly || isActive}
+                className="mt-2 bg-white/5 border-white/20 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="e.g., Should I go to graduate school?"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Context</label>
+              <Textarea
+                value={localDescription}
+                onChange={(e) => setLocalDescription(e.target.value)}
+                disabled={isReadOnly || isActive}
+                className="mt-2 bg-white/5 border-white/20 text-white min-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Provide context for your decision..."
+              />
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Personal Notes</label>
+              <Textarea
+                value={localNotes}
+                onChange={(e) => setLocalNotes(e.target.value)}
+                disabled={isReadOnly}
+                className="mt-2 bg-white/5 border-white/20 text-white min-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Add your thoughts here..."
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Active Decision: Selection Buttons */}
+            {isActive && (
+              <div className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-white/20 rounded-lg p-4">
+                <label className="text-sm font-medium text-white mb-3 block">
+                  Do you want to go down this branch?
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={() => handleSelection("yes")}
+                    className={`flex items-center justify-center gap-2 font-semibold transition-all ${
+                      localSelection === "yes"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
+                    }`}
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    Yes
+                  </Button>
+                  <Button
+                    onClick={() => handleSelection("no")}
+                    className={`flex items-center justify-center gap-2 font-semibold transition-all ${
+                      localSelection === "no"
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/20"
+                    }`}
+                  >
+                    <ThumbsDown className="w-4 h-4" />
+                    No
+                  </Button>
+                </div>
+                {localSelection === "pending" && (
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    No selection made yet
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Node Type */}
+            <div className="relative">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Type</label>
           <button
             onClick={() => !isReadOnly && setShowTypeMenu(!showTypeMenu)}
             disabled={isReadOnly}
@@ -357,25 +408,24 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
               </button>
 
               {showAdvanced && (
-                <div className="mt-4 space-y-4">
-                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-yellow-200">
-                        Manual weight adjustments will override AHP-calculated weights. For best results, use the guided pairwise comparison when activating the decision.
-                      </p>
-                    </div>
+                <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg space-y-4">
+                  {/* Warning */}
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-yellow-200">
+                      Manual weight adjustments will override AHP-calculated weights. Use pairwise comparisons for more rigorous methodology.
+                    </p>
                   </div>
 
                   {/* Importance Slider */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
                         Importance
                       </label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                          <Info className="w-3 h-3 text-gray-400 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>How critical is this factor to your decision?</p>
@@ -385,10 +435,7 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                     <div className="flex items-center gap-4">
                       <Slider
                         value={[importance]}
-                        onValueChange={(value) => {
-                          setImportance(value[0])
-                          setSlidersModified(true)
-                        }}
+                        onValueChange={(value) => setImportance(value[0])}
                         min={0}
                         max={100}
                         step={1}
@@ -401,12 +448,12 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                   {/* Emotional Weight Slider */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
                         Emotional Weight
                       </label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                          <Info className="w-3 h-3 text-gray-400 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>How emotionally invested are you in this factor?</p>
@@ -416,10 +463,7 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                     <div className="flex items-center gap-4">
                       <Slider
                         value={[emotionalWeight]}
-                        onValueChange={(value) => {
-                          setEmotionalWeight(value[0])
-                          setSlidersModified(true)
-                        }}
+                        onValueChange={(value) => setEmotionalWeight(value[0])}
                         min={0}
                         max={100}
                         step={1}
@@ -432,12 +476,12 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                   {/* Uncertainty Slider */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
                         Uncertainty
                       </label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                          <Info className="w-3 h-3 text-gray-400 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>How uncertain are you about this factor's outcome?</p>
@@ -447,10 +491,7 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                     <div className="flex items-center gap-4">
                       <Slider
                         value={[uncertainty]}
-                        onValueChange={(value) => {
-                          setUncertainty(value[0])
-                          setSlidersModified(true)
-                        }}
+                        onValueChange={(value) => setUncertainty(value[0])}
                         min={0}
                         max={100}
                         step={1}
@@ -460,15 +501,15 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                     </div>
                   </div>
 
-            {/* Regret Potential Slider */}
+                  {/* Regret Potential Slider */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                      <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
                         Regret Potential
                       </label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                          <Info className="w-3 h-3 text-gray-400 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>How much might you regret not choosing this?</p>
@@ -478,10 +519,7 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                     <div className="flex items-center gap-4">
                       <Slider
                         value={[regretPotential]}
-                        onValueChange={(value) => {
-                          setRegretPotential(value[0])
-                          setSlidersModified(true)
-                        }}
+                        onValueChange={(value) => setRegretPotential(value[0])}
                         min={0}
                         max={100}
                         step={1}
@@ -489,6 +527,13 @@ export function NodeDetailsPanel({ node, decisionStatus, onClose, onUpdate }: No
                       />
                       <div className="text-white font-semibold w-12 text-right">{regretPotential}</div>
                     </div>
+                  </div>
+
+                  {/* Normalized Weight Preview */}
+                  <div className="pt-2 border-t border-yellow-500/20">
+                    <div className="text-xs text-gray-400 mb-1">Calculated Weight</div>
+                    <div className="text-lg font-semibold text-white">{rawWeight}%</div>
+                    <p className="text-xs text-gray-500 mt-1">Will normalize among siblings</p>
                   </div>
                 </div>
               )}
